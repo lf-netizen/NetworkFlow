@@ -8,6 +8,7 @@ class Datagram:
     request_time: Time
     priority: int
     arrival_time: Time = None
+    to_termination: int = 2
     
     def __lt__(self, other):
         return self.priority <  other.priority if self.priority != other.priority else  self.request_time <  other.request_time

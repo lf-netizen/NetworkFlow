@@ -49,6 +49,10 @@ class Router(IDevice):
 
     def receive_datagram(self, datagrams: list[Datagram]) -> None:
         for dg in datagrams:
+            dg.to_termination -= 1
+            if not dg.to_termination:
+                continue
+
             dest_id = dg.destination_id
             # single receiver
             if isinstance(dest_id, int):
