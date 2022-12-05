@@ -4,10 +4,11 @@ from dataclasses import dataclass
 @dataclass
 class Datagram:
     source_id: ID
-    destination_id: ID 
+    destination_id: ID | list[ID]
     request_time: Time
     priority: int
     arrival_time: Time = None
+    
     def __lt__(self, other):
         return self.priority <  other.priority if self.priority != other.priority else  self.request_time <  other.request_time
     def  __le__(self, other):
