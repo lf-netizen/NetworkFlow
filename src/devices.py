@@ -3,9 +3,8 @@ import copy
 from abc import ABC, abstractmethod
 from queue import PriorityQueue
 from datagram import Datagram
-from custom_types import Time, ID
-
-timer: Time = 0
+from custom_types import ID
+import timer
 
 class IDevice(ABC):
     routers_ids = set()
@@ -13,28 +12,32 @@ class IDevice(ABC):
     def __init__(self, id: ID) -> None:
         super().__init__()
         if id in self.routers_ids.union(self.endpoints_ids):
-            raise ValueError(f"duplicate id: {id}")
+            raise ValueError(f"Duplicate id: {id}.")
         self.id = id
 
     @abstractmethod
-    def send_datagram(self) -> list[tuple[ID, Datagram]]:
+    def send_datagrams(self) -> list[tuple[ID, Datagram]]:
         pass
 
     @abstractmethod
-    def receive_datagram(self, datagrams: list[Datagram]) -> None:
+    def receive_datagrams(self, datagrams: list[Datagram]) -> None:
+        pass
+
+    @abstractmethod
+    def reset(self) -> None:
         pass
     
 
 class Router(IDevice):
-    def __init__(self, id: ID, transmission_capacity: int, routing_table: dict[ID: ID]) -> None:
+    def __init__(self, id: ID, transmission_capacity: int, routing_table: dict[ID: ID] = {}) -> None:
         super().__init__(id)
         self.routers_ids.add(id)
 
         self.transmission_capacity = transmission_capacity # number of datagrams sent per time unit
         self.routing_table = routing_table
-        self.queue = PriorityQueue[Datagram]()
+        self.queue: PriorityQueue[Datagram] = PriorityQueue()
 
-    def send_datagram(self) -> list[tuple[ID, Datagram]]:
+    def send_datagrams(self) -> list[tuple[ID, Datagram]]:
         data_to_be_sent = []
         for _ in range(self.transmission_capacity):
             if self.queue.empty():
@@ -47,7 +50,7 @@ class Router(IDevice):
         
         return data_to_be_sent
 
-    def receive_datagram(self, datagrams: list[Datagram]) -> None:
+    def receive_datagrams(self, datagrams: list[Datagram]) -> None:
         for dg in datagrams:
             dg.to_termination -= 1
             if not dg.to_termination:
@@ -57,7 +60,7 @@ class Router(IDevice):
             # single receiver
             if isinstance(dest_id, int):
                 if dest_id not in self.routing_table:
-                    raise KeyError(f"Destination id {dg.destination_id} not in routing table of router {self.id}")
+                    raise KeyError(f"Destination id {dg.destination_id} not in routing table of router {self.id}.")
                 self.queue.put(dg)
                 continue
             # multiple receivers
@@ -77,27 +80,34 @@ class Router(IDevice):
                 split_dg.destination_id = split_dest_id
                 self.queue.put(split_dg)
                 
+    def reset(self) -> None:
+        self.queue = PriorityQueue()
 
 class Endpoint(IDevice):
-    def __init__(self, id: ID, gate_id: ID, schedule: list[Datagram] =[]) -> None:
+    def __init__(self, id: ID, gate_id: ID, schedule: list[Datagram] = []) -> None:
         super().__init__(id)
         self.endpoints_ids.add(id)
+
         self.gate_id = gate_id
         self.schedule = sorted(schedule, key=lambda dg: dg.request_time)
         self.received_datagrams: list[Datagram] = []
 
-    def send_datagram(self) -> list[tuple[ID, Datagram]]:
+    def send_datagrams(self) -> list[tuple[ID, Datagram]]:
         if not self.schedule:
-            return
+            return []
         data_to_be_sent = []
-        while self.schedule[0].request_time == timer:
+        while len(self.schedule) and self.schedule[0].request_time == timer.time:
             data_to_be_sent.append((self.gate_id, self.schedule.pop(0)))
         return data_to_be_sent
 
-    def receive_datagram(self, datagrams: list[Datagram]) -> None:
+    def receive_datagrams(self, datagrams: list[Datagram]) -> None:
         for dg in datagrams:
-            dg.arrival_time = timer
+            dg.arrival_time = timer.time
         self.received_datagrams += datagrams
+
+    def reset(self) -> None:
+        self.schedule = []
+        self.received_datagrams = []
 
 
 if __name__ == '__main__':
@@ -113,9 +123,9 @@ if __name__ == '__main__':
     e3 = Endpoint(id=5, gate_id=3)
 
 
-    timer += 1
-    r1.receive_datagram([second for _, second in e1.send_datagram()])
-    r2.receive_datagram([second for _, second in r1.send_datagram()])
+    timer.time += 1
+    r1.receive_datagrams([second for _, second in e1.send_datagrams()])
+    r2.receive_datagrams([second for _, second in r1.send_datagrams()])
 
     print('')
 
