@@ -18,7 +18,9 @@ class Datagram:
         return self.priority >  other.priority if self.priority != other.priority else  self.request_time >  other.request_time
     def  __ge__(self, other):
         return self.priority >= other.priority if self.priority != other.priority else  self.request_time >= other.request_time
-
+        
+class TerminationError(Exception):
+        pass
 
 if __name__ == '__main__':
     d1 = Datagram(1, 1, 10, 1)
