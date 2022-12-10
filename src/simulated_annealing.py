@@ -4,7 +4,7 @@ from typing import Dict, List
 import random
 from network import Network
 from custom_types import ID
-
+import matplotlib.pyplot as plt
 
 class OptimizationModel:
 
@@ -113,7 +113,7 @@ class OptimizationModel:
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
-    def run_model(self, t0: float = 0.95, t1: float = 0.001, alpha: float = 0.5, epoch_size: int = 10):
+    def run_model(self, t0: float = 1000000, t1: float = 0.000001, alpha: float = 0.95, epoch_size: int = 10):
         """
         Minimizes loss function using simulated annealing
 
@@ -129,9 +129,11 @@ class OptimizationModel:
         """
         #creating a random solution
         x = self.create_random_solution()
-        cost = []
+        self.network.load_routing_tables(x)
         t = t0
+        it = 1
         previous_loss = self.network.simulate(20)
+        cost = [previous_loss]
         while t1 < t:
             for _ in range(epoch_size):
                 x1 = self.change_solution(x)
@@ -141,46 +143,67 @@ class OptimizationModel:
                     x = x1
                     previous_loss = new_loss
                 else:
-                    probability = np.exp((new_loss - previous_loss)/t)
+                    probability = np.exp(-(new_loss - previous_loss)/t)
                     if probability > np.random.random():
                         x = x1
                         previous_loss = new_loss
                 Model.network.reset_state(with_schedule=False)
-                cost.append(x)
+                it += 1
+                cost.append(previous_loss)
             t = t * alpha
-        return x, cost
+        return x, it, cost
 
 
 if __name__ == '__main__':
-    adjmatrix = np.array([[0, 1, 1, 0, 0, 0, 1],
-                  [1, 0, 1, 1, 0, 0, 0],
-                  [1, 1, 0, 0, 1, 1, 0],
-                  [0, 1, 0, 0, 0, 0, 0],
-                  [0, 0, 1, 0, 0, 0, 0],
-                  [0, 0, 1, 0, 0, 0, 0],
-                  [1, 0, 0, 0, 0, 0, 0]], dtype=object)
+    # 7 routers and 4 pcs
+    adjmatrix = np.array([[0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0],
+                        [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0],
+                        [1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+                        [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1],
+                        [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
+                        [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+                        [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]],dtype=object)
     arch = {
         'routers': [
             {'id': 0, 'transmission_capacity':  5},
             {'id': 1, 'transmission_capacity': 10},
-            {'id': 2, 'transmission_capacity': 10}
+            {'id': 2, 'transmission_capacity': 10},
+            {'id': 3, 'transmission_capacity': 5},
+            {'id': 4, 'transmission_capacity': 10},
+            {'id': 5, 'transmission_capacity': 10},
+            {'id': 6, 'transmission_capacity': 5}
         ],
         'endpoints': [
-            {'id': 3, 'gate_id': 1},
-            {'id': 4, 'gate_id': 2},
-            {'id': 5, 'gate_id': 2},
-            {'id': 6, 'gate_id': 0}
+            {'id': 7, 'gate_id': 0},
+            {'id': 8, 'gate_id': 1},
+            {'id': 9, 'gate_id': 2},
+            {'id': 10, 'gate_id': 3}
         ]
     }
 
     schedule = {
-        3: [
-            {'destination_id': 4,      'request_time': 1, 'priority': 2},
-            {'destination_id': [4, 5], 'request_time': 1, 'priority': 2},
-            {'destination_id': 6,      'request_time': 3, 'priority': 1}
+        7: [
+            {'destination_id': 8,      'request_time': 2, 'priority': 2},
+            {'destination_id': [9, 10], 'request_time': 4, 'priority': 2},
+            {'destination_id': 9,      'request_time': 3, 'priority': 1}
         ],
-        4: [
-            {'destination_id': 3,      'request_time': 1, 'priority': 1}
+        8: [
+            {'destination_id': 7,      'request_time': 1, 'priority': 2},
+            {'destination_id': 9, 'request_time': 2, 'priority': 2},
+            {'destination_id': 10,      'request_time': 3, 'priority': 1}
+        ],
+        9: [
+            {'destination_id': 7, 'request_time': 5, 'priority': 2},
+            {'destination_id': 8, 'request_time': 3, 'priority': 1}
+        ],
+        10: [
+            {'destination_id': 7, 'request_time': 4, 'priority': 2},
+            {'destination_id': 8, 'request_time': 6, 'priority': 2},
+            {'destination_id': 9, 'request_time': 3, 'priority': 1}
         ]
     }
 
@@ -188,6 +211,9 @@ if __name__ == '__main__':
     network = Network(arch)
     network.load_schedule(schedule)
     Model = OptimizationModel(network=network, adjmatrix=adjmatrix)
-    print(Model.create_random_solution())
-    solution, cost_array = Model.run_model()
-    print(solution, cost_array)
+    solution, it, cost_array = Model.run_model()
+    plt.figure()
+    plt.plot(np.linspace(1, it, it), cost_array)
+    plt.xlabel('Iterations')
+    plt.ylabel('Loss function value')
+    plt.show()
