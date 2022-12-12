@@ -25,7 +25,6 @@ class Network:
             self.endpoints[id].schedule = [Datagram(id, dg['destination_id'], dg['request_time'], 
                                                     dg['priority'], to_termination=len(self.routers)+1) for dg in sch]
         
-        
     def reset_state(self, with_schedule: bool = True) -> None:
         timer.time = 0
         self.datagrams = []
@@ -34,17 +33,26 @@ class Network:
         if not with_schedule:
             self.load_schedule(self.schedule)
 
-    def simulate(self) -> float:
+    def simulate(self, ticks: Time = None) -> float:
         if self.schedule is None:
             raise ValueError('Schedule is empty')
-        total_datagrams = sum([1 if isinstance(dg['destination_id'], ID) else len(dg['destination_id']) for sch in self.schedule.values() for dg in sch])
-        terminated_datagrams = 0
-        received_datagrams = 0
 
+        total_datagrams = sum([1 if isinstance(dg['destination_id'], ID) else len(dg['destination_id']) for sch in self.schedule.values() for dg in sch])
         if total_datagrams == 0:
             raise ValueError('Schedule contains no datagrams to be sent')
 
-        while total_datagrams > terminated_datagrams + received_datagrams:
+        # calculate current state of the simulation
+        datagrams_to_be_sent = sum([1 if isinstance(dg.destination_id, ID) else len(dg.destination_id) for e in self.endpoints.values() for dg in e.schedule])
+        datagrams_in_network = sum([len(r.queue.queue) for r in self.routers.values()])
+        received_datagrams = sum([len(e.received_datagrams) for e in self.endpoints.values()])
+        terminated_datagrams = total_datagrams - received_datagrams - datagrams_in_network - datagrams_to_be_sent
+
+        init_time = timer.time
+        under_time_limit = lambda: True if ticks is None else timer.time < init_time + ticks
+        not_finished = lambda: total_datagrams > terminated_datagrams + received_datagrams
+        run_simulation = lambda: under_time_limit() and not_finished()
+
+        while run_simulation():
             timer.time += 1
             if timer.time > 10e4:
                 raise TimeoutError('Infinite simulation. You may try to reset state before calling simulate.')
@@ -72,21 +80,20 @@ class Network:
                     received_datagrams += 1
 
         # calculate loss function
-        # punishment for lost datagrams
-        total_time = 20 * terminated_datagrams
+        total_time = 0
         for e in self.e_it:
             for dg in e.received_datagrams:
                 total_time += dg.arrival_time - dg.request_time
-        
-        loss = total_time / total_datagrams
+        avg_time = 0 if received_datagrams == 0 else total_time / received_datagrams
+        loss = avg_time + 0.2 * terminated_datagrams
         return loss
 
 
 if __name__ == '__main__':
     arch = {
         'routers': [
-            {'id': 2, 'transmission_capacity':  5}, 
-            {'id': 3, 'transmission_capacity': 10}
+            {'id': 2, 'transmission_capacity': 1}, 
+            {'id': 3, 'transmission_capacity': 2}
         ],
         'endpoints': [
             {'id': 1, 'gate_id': 2},
