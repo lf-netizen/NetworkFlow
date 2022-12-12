@@ -132,13 +132,14 @@ class OptimizationModel:
         self.network.load_routing_tables(x)
         t = t0
         it = 1
-        previous_loss = self.network.simulate(20)
+        previous_loss = self.network.simulate()
+        self.network.reset_state(with_schedule=False)
         cost = [previous_loss]
         while t1 < t:
             for _ in range(epoch_size):
                 x1 = self.change_solution(x)
                 self.network.load_routing_tables(x1)
-                new_loss = self.network.simulate(20)
+                new_loss = self.network.simulate()
                 if new_loss < previous_loss:
                     x = x1
                     previous_loss = new_loss
@@ -147,7 +148,7 @@ class OptimizationModel:
                     if probability > np.random.random():
                         x = x1
                         previous_loss = new_loss
-                Model.network.reset_state(with_schedule=False)
+                self.network.reset_state(with_schedule=False)
                 it += 1
                 cost.append(previous_loss)
             t = t * alpha

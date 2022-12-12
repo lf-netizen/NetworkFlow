@@ -1,5 +1,5 @@
 from itertools import chain
-from custom_types import Time
+from custom_types import Time, ID
 from devices import Router, Endpoint
 from datagram import Datagram, TerminationError
 import timer
@@ -34,10 +34,20 @@ class Network:
         if not with_schedule:
             self.load_schedule(self.schedule)
 
-    def simulate(self, timespan: Time) -> float:
+    def simulate(self) -> float:
+        if self.schedule is None:
+            raise ValueError('Schedule is empty')
+        total_datagrams = sum([1 if isinstance(dg['destination_id'], ID) else len(dg['destination_id']) for sch in self.schedule.values() for dg in sch])
         terminated_datagrams = 0
-        for _ in range(timespan):
+        received_datagrams = 0
+
+        if total_datagrams == 0:
+            raise ValueError('Schedule contains no datagrams to be sent')
+
+        while total_datagrams > terminated_datagrams + received_datagrams:
             timer.time += 1
+            if timer.time > 10e4:
+                raise TimeoutError('Infinite simulation. You may try to reset state before calling simulate.')
             # send new datagrams to endpoints' gates
             buffer_datagrams = []
             for e in self.e_it:
@@ -59,19 +69,15 @@ class Network:
                         terminated_datagrams += 1
                 else:
                     self.endpoints[id].receive_datagram(dg)
+                    received_datagrams += 1
 
         # calculate loss function
         # punishment for lost datagrams
-        total_time = timespan * terminated_datagrams
-        total_datagrams = terminated_datagrams
+        total_time = 20 * terminated_datagrams
         for e in self.e_it:
-            total_datagrams += len(e.received_datagrams)
             for dg in e.received_datagrams:
                 total_time += dg.arrival_time - dg.request_time
         
-        if total_datagrams == 0:
-            raise ValueError('Schedule contains no datagrams to be sent within simulation timespan')
-
         loss = total_time / total_datagrams
         return loss
 
@@ -109,7 +115,7 @@ if __name__ == '__main__':
     network.load_schedule(schedule)
     for _ in range(2):
         network.load_routing_tables(routing_tables) # assuming routing tables are modified with every iteration
-        loss = network.simulate(20)
+        loss = network.simulate()
         network.reset_state(with_schedule=False)
         print(loss)
 

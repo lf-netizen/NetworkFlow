@@ -99,8 +99,17 @@ class Endpoint(IDevice):
         self.endpoints_ids.add(id)
 
         self.gate_id = gate_id
-        self.schedule = sorted(schedule, key=lambda dg: dg.request_time)
+        self.schedule = schedule
         self.received_datagrams: list[Datagram] = []
+
+    @property
+    def schedule(self):
+        return self._schedule
+        
+    @schedule.setter
+    def schedule(self, schedule):
+        self._schedule = sorted(schedule, key=lambda dg: dg.request_time)
+
 
     def send_datagrams(self) -> list[tuple[ID, Datagram]]:
         if not self.schedule:
