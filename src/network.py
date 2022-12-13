@@ -1,6 +1,6 @@
 from itertools import chain
 from custom_types import Time, ID
-from devices import Router, Endpoint
+from devices import Router, Endpoint, IDevice
 from datagram import Datagram, TerminationError
 import timer
 
@@ -25,13 +25,18 @@ class Network:
             self.endpoints[id].schedule = [Datagram(id, dg['destination_id'], dg['request_time'], 
                                                     dg['priority'], to_termination=len(self.routers)+1) for dg in sch]
         
-    def reset_state(self, with_schedule: bool = True) -> None:
+    def reset_state(self, with_schedule: bool = True, with_devices: bool = False) -> None:
         timer.time = 0
         self.datagrams = []
         for device in chain(self.r_it, self.e_it):
             device.reset()
         if not with_schedule:
             self.load_schedule(self.schedule)
+        if with_devices:
+            self.routers = {}
+            self.endpoints = {}
+            IDevice.endpoints_ids = set()
+            IDevice.routers_ids = set()
 
     def simulate(self, ticks: Time = None) -> float:
         if self.schedule is None:

@@ -113,7 +113,7 @@ class OptimizationModel:
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
-    def run_model(self, t0: float = 1000000, t1: float = 0.000001, alpha: float = 0.95, epoch_size: int = 10):
+    def run_model(self, t0: float = 1000000, t1: float = 0.000001, alpha: float = 0.95, epoch_size: int = 100):
         """
         Minimizes loss function using simulated annealing
 
@@ -135,7 +135,14 @@ class OptimizationModel:
         previous_loss = self.network.simulate()
         self.network.reset_state(with_schedule=False)
         cost = [previous_loss]
+
+        total_iterations = int(np.log(t1/t0) / np.log(alpha))
+        a = 95 / total_iterations**2
+        def num_epochs(it):
+            return int(a*it**2 + 5)
+        
         while t1 < t:
+            epoch_size = num_epochs(it)
             for _ in range(epoch_size):
                 x1 = self.change_solution(x)
                 self.network.load_routing_tables(x1)
@@ -149,8 +156,8 @@ class OptimizationModel:
                         x = x1
                         previous_loss = new_loss
                 self.network.reset_state(with_schedule=False)
-                it += 1
                 cost.append(previous_loss)
+            it += 1
             t = t * alpha
         return x, it, cost
 
@@ -214,7 +221,7 @@ if __name__ == '__main__':
     Model = OptimizationModel(network=network, adjmatrix=adjmatrix)
     solution, it, cost_array = Model.run_model()
     plt.figure()
-    plt.plot(np.linspace(1, it, it), cost_array)
+    plt.plot(cost_array)
     plt.xlabel('Iterations')
     plt.ylabel('Loss function value')
     plt.show()
