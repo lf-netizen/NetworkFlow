@@ -1,5 +1,5 @@
 from custom_types import Time, ID
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class Datagram:
@@ -9,7 +9,8 @@ class Datagram:
     priority: int
     arrival_time: Time = None
     to_termination: int = 20
-    
+    route: list[ID] = field(default_factory=list)
+
     def __lt__(self, other):
         return self.priority <  other.priority if self.priority != other.priority else  self.request_time <  other.request_time
     def  __le__(self, other):

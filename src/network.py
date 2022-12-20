@@ -15,6 +15,8 @@ class Network:
         self.r_it = self.routers.values()
         self.e_it = self.endpoints.values()
 
+        self.logs = {'edges_weight': {d.id: {} for d in chain(self.r_it, self.e_it)}}
+
     def load_routing_tables(self, routing_tables) -> None:
         for id, rt in routing_tables.items():
             self.routers[id].routing_table = rt
@@ -23,11 +25,12 @@ class Network:
         self.schedule = schedule
         for id, sch in schedule.items():
             self.endpoints[id].schedule = [Datagram(id, dg['destination_id'], dg['request_time'], 
-                                                    dg['priority'], to_termination=len(self.routers)+1) for dg in sch]
+                                                    dg['priority'], to_termination=len(self.routers)+1, route=[id]) for dg in sch]
         
     def reset_state(self, with_schedule: bool = True, with_devices: bool = False) -> None:
         timer.time = 0
         self.datagrams = []
+        self.logs = {'edges_weight': {d.id: {} for d in chain(self.r_it, self.e_it)}}
         for device in chain(self.r_it, self.e_it):
             device.reset()
         if not with_schedule:
@@ -91,6 +94,16 @@ class Network:
                 total_time += dg.arrival_time - dg.request_time
         avg_time = 0 if received_datagrams == 0 else total_time / received_datagrams
         loss = avg_time + 0.2 * terminated_datagrams
+
+        # create logs
+        # count how many datagrams went through an edge
+        for e in self.e_it:
+            for dg in e.received_datagrams:
+                for src, dst in zip(dg.route[:-1], dg.route[1:]):
+                    if dst not in self.logs['edges_weight'][src]:
+                        self.logs['edges_weight'][src][dst] = 0
+                    self.logs['edges_weight'][src][dst] += 1
+                    
         return loss
 
 

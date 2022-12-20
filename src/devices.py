@@ -9,6 +9,8 @@ import timer
 class IDevice(ABC):
     routers_ids = set()
     endpoints_ids = set()
+    terminated_datagrams = []
+
     def __init__(self, id: ID) -> None:
         super().__init__()
         if id in self.routers_ids.union(self.endpoints_ids):
@@ -62,8 +64,10 @@ class Router(IDevice):
         return data_to_be_sent
 
     def receive_datagram(self, dg: Datagram) -> None:
+        dg.route.append(self.id)
         dg.to_termination -= 1
         if not dg.to_termination:
+            self.terminated_datagrams.append(dg)
             raise TerminationError()
 
         dest_id = dg.destination_id
@@ -83,7 +87,7 @@ class Router(IDevice):
         
         unique_next = set(next_id)
         for u_n in unique_next:
-            split_dg = copy.copy(dg)
+            split_dg = copy.deepcopy(dg)
             split_dest_id = [dest_id[i] for i in [i for i, id in enumerate(next_id) if id == u_n]]
             if len(split_dest_id) == 1:
                 split_dest_id = split_dest_id[0]
@@ -121,6 +125,7 @@ class Endpoint(IDevice):
 
     def receive_datagram(self, dg: Datagram) -> None:
         dg.arrival_time = timer.time
+        dg.route.append(self.id)
         self.received_datagrams.append(dg)
 
     def reset(self) -> None:
@@ -137,8 +142,8 @@ if __name__ == '__main__':
     e1 = Endpoint(id=1, gate_id=2, schedule=[dg1, dg2, dg3, dg4])
     e2 = Endpoint(id=4, gate_id=3)
     e3 = Endpoint(id=5, gate_id=3)
-    r1 = Router(id=2, transmission_capacity=1,  routing_table={4: 3, 5: 3})
-    r2 = Router(id=3, transmission_capacity=10, routing_table={4: 4, 5: 5})
+    r1 = Router(id=2, transmission_capacity=1,  routing_table={4: 3, 5: 3, 1: 1})
+    r2 = Router(id=3, transmission_capacity=10, routing_table={4: 4, 5: 5, 1: 2})
 
 
     timer.time += 1
