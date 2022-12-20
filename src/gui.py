@@ -184,6 +184,8 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.Model = self.load_model()
         self.q = self.Model.log_queue
 
+        self.is_running = False
+
     def draw_graph(self, data):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
@@ -195,6 +197,7 @@ class ChartInFrame(customtkinter.CTkFrame):
             data = self.q.get(block=True)
             if data is None:
                 print('returning - end of simulation')
+                self.is_running = False
                 return
             self.draw_graph(data)
             event.set()
@@ -271,6 +274,10 @@ class ChartInFrame(customtkinter.CTkFrame):
 
 
     def plot_chart(self, slider_t0=100000, slider_t1=0.00001, slider_alpha=0.95, slider_epoch_size=100):        
+        if self.is_running:
+            return
+        self.is_running = True
+        
         self.Model.network.reset_state(with_schedule=False)
         event = threading.Event()
         t1 = threading.Thread(target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, event))
