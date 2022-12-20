@@ -5,7 +5,7 @@ import random
 from network import Network
 from custom_types import ID
 import matplotlib.pyplot as plt
-
+import queue
 class OptimizationModel:
 
     routing_tables = Dict[int, Dict[int, int]]
@@ -15,6 +15,8 @@ class OptimizationModel:
     def __init__(self, network: Network, adjmatrix: AdjMatrix):
         self.network = network
         self.adjmatrix = adjmatrix
+
+        self.log_queue = queue.Queue()
 
     def find_random_path(self, start_vertex: ID, end_vertex: ID) -> path:
         """
@@ -113,7 +115,7 @@ class OptimizationModel:
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
-    def run_model(self, t0: float = 1000000, t1: float = 0.000001, alpha: float = 0.95, epoch_size: int = 100):
+    def run_model(self, t0: float = 1000000, t1: float = 0.000001, alpha: float = 0.95, epoch_size: int = 100, event=None):
         """
         Minimizes loss function using simulated annealing
 
@@ -157,8 +159,17 @@ class OptimizationModel:
                         previous_loss = new_loss
                 self.network.reset_state(with_schedule=False)
                 cost.append(previous_loss)
+
+                # for chart generation
+                if not len(cost) % 150:
+                    self.log_queue.put(cost)
+                    event.wait()
+                    event.clear()
+                    
             it += 1
             t = t * alpha
+
+        self.log_queue.put(None)
         return x, it, cost
 
 

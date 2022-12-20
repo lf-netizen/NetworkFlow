@@ -13,6 +13,10 @@ from network import Network
 from custom_types import ID
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import queue
+import tkinter as tk
+import time
+import threading
 
 customtkinter.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -158,6 +162,8 @@ class ChartFrame(customtkinter.CTkFrame):
 
         self.chart = ChartInFrame(self)
         self.chart.grid(row=0, column=1)
+        # self.chart.after(0, self.chart.process_queue)
+        # self.chart.after(1000, self.chart.add_to_queue)  # schedule the add_to_queue method to be called after 1 second
 
     def plot_chart_event(self):
         self.chart.plot_chart()
@@ -167,15 +173,46 @@ class ChartInFrame(customtkinter.CTkFrame):
     def __init__(self, *args, test_value=1, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._corner_radius=0
-        self.test_value = test_value
+        self.canvas = tk.Canvas(self, width=500, height=500)
+        self.canvas.pack()
 
-        if self.test_value == 0:
-            self.plot_chart()
-            # self.test_value = 5
+        self.fig = plt.figure(figsize=(5, 5))
+        self.figure_canvas = FigureCanvasTkAgg(self.fig, self.canvas)
+        self.figure_canvas.draw()
+        self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
 
-    def plot_chart(self, slider_t0=1000000, slider_t1=0.000001, slider_alpha=0.95, slider_epoch_size=100):
+        self.Model = self.load_model()
+        self.q = self.Model.log_queue
 
+    def draw_graph(self, data):
+        self.fig.clear()
+        ax = self.fig.add_subplot(111)
+        ax.plot(data)
+        self.fig.canvas.draw()
+
+    def process_queue(self, event):
+        while True:
+            data = self.q.get(block=True)
+            if data is None:
+                print('returning - end of simulation')
+                return
+            self.draw_graph(data)
+            event.set()
+
+    def add_to_queue(self):
+        # create some example data
+        data1 = [1, 2, 3, 4]
+        data2 = [5, 6, 7, 8]
+        data3 = [9, 10, 11, 12]
+
+        # add the first data to the queue
+        self.q.put(data1)
+
+        # schedule the second and third data to be added to the queue after 2 seconds and 4 seconds respectively
+        self.after(2000, lambda: self.q.put(data2))
+        self.after(4000, lambda: self.q.put(data3))
+
+    def load_model(self):
         adjmatrix = np.array([[0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0],
                             [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0],
                             [1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
@@ -230,20 +267,34 @@ class ChartInFrame(customtkinter.CTkFrame):
 
         network = Network(arch)
         network.load_schedule(schedule)
-        Model = OptimizationModel(network=network, adjmatrix=adjmatrix)
-        solution, it, cost_array = Model.run_model(slider_t0, slider_t1, slider_alpha, slider_epoch_size)
-        Model.network.reset_state(with_schedule=True, with_devices=True)
+        return OptimizationModel(network=network, adjmatrix=adjmatrix)
 
-        k = np.linspace(1, it, it)
 
-        fig = plt.Figure(figsize=(5, 4), dpi=100)
-        ax = fig.add_subplot(111)
-        ax.plot(k, cost_array)
-        plot1 = FigureCanvasTkAgg(fig, self)
-        plot1.get_tk_widget().pack(side=tkinter.LEFT, fill=tkinter.BOTH)
-        ax.legend(['legend'])
-        ax.set_xlabel('x label')
-        ax.set_title('title')
+    def plot_chart(self, slider_t0=100000, slider_t1=0.00001, slider_alpha=0.95, slider_epoch_size=100):        
+        self.Model.network.reset_state(with_schedule=False)
+        event = threading.Event()
+        t1 = threading.Thread(target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, event))
+        t2 = threading.Thread(target=self.process_queue, args=(event, ))
+        
+        t1.start()
+        t2.start()
+
+        # t1.join()
+        # t2.join()
+
+        # Model.network.reset_state(with_schedule=True, with_devices=True)
+
+
+        # fig = plt.Figure(figsize=(5, 4), dpi=100)
+        # ax = fig.add_subplot(111)
+        # ax.plot(cost_array)
+        # plot1 = FigureCanvasTkAgg(fig, self)
+        # plot1.get_tk_widget().pack(side=tkinter.LEFT, fill=tkinter.BOTH)
+        # ax.legend(['legend'])
+        # ax.set_xlabel('x label')
+        # ax.set_title('title')
+
+
 
         # figure2 = plt.Figure(figsize=(15, 14), dpi=100)
         # ax2 = figure2.add_subplot(111)
