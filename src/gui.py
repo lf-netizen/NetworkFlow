@@ -13,6 +13,7 @@ from network import Network
 from custom_types import ID
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 import queue
 import tkinter as tk
 import time
@@ -176,7 +177,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.canvas = tk.Canvas(self, width=500, height=500)
         self.canvas.pack()
 
-        self.fig = plt.figure(figsize=(5, 5))
+        self.fig = Figure(figsize=(5, 5))
         self.figure_canvas = FigureCanvasTkAgg(self.fig, self.canvas)
         self.figure_canvas.draw()
         self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
@@ -280,8 +281,8 @@ class ChartInFrame(customtkinter.CTkFrame):
         
         self.Model.network.reset_state(with_schedule=False)
         event = threading.Event()
-        t1 = threading.Thread(target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, event))
-        t2 = threading.Thread(target=self.process_queue, args=(event, ))
+        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, event))
+        t2 = threading.Thread(daemon=True, target=self.process_queue, args=(event, ))
         
         t1.start()
         t2.start()
