@@ -15,7 +15,6 @@ class OptimizationModel:
     def __init__(self, network: Network, adjmatrix: AdjMatrix):
         self.network = network
         self.adjmatrix = adjmatrix
-
         self.log_queue = queue.Queue()
 
     def find_random_path(self, start_vertex: ID, end_vertex: ID) -> path:
@@ -90,6 +89,7 @@ class OptimizationModel:
 
     def change_solution(self, current_solution: routing_tables) -> routing_tables:
         """
+        Neighbourhood 1
         Changes random value in the current_solution matrix and checks if this solution is possible
 
         inputs:
@@ -115,7 +115,80 @@ class OptimizationModel:
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
-    def run_model(self, t0: float = 1000000, t1: float = 0.000001, alpha: float = 0.95, epoch_size: int = 100, event=None):
+    def change_solution2(self, current_solution: routing_tables) -> routing_tables:
+        """
+        Neighbourhood 2
+        Highest amount of datagrams that went thorugh an edge
+        Changes random value in the current_solution matrix and checks if this solution is possible
+
+        inputs:
+        current_solution - current best solution for the algorithm
+        G - adjacency matrix showing connections between routers and PC's
+
+        outputs:
+        current_solution - new_solution
+        """
+        current_solution_copy = copy.deepcopy(current_solution)
+        max = 0
+        for src, dst in self.network.logs['edges_weight'].items():
+            curr_max = np.max(dst.values())
+            if curr_max > max:
+                start_index = src
+                end_index =  [k for k, v in dst.items() if v == np.max(dst.values())][0]
+                max = curr_max
+        while True:
+            router_connection_to_change = start_index
+            endpoint_directory_to_change = random.choice(list(current_solution[router_connection_to_change].keys()))
+            new_directory = random.choice(list(self.network.routers.keys()))
+            previous_directory = end_index
+            #checking if there is connection between router y and new directory
+            if self.adjmatrix[router_connection_to_change][new_directory] == 1:
+                #checking if new solution is acyclic
+                current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = new_directory
+                if self.is_acyclic(current_solution_copy):
+                    current_solution[router_connection_to_change][endpoint_directory_to_change] = new_directory
+                    return current_solution
+                else:
+                    current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
+
+    def change_solution3(self, current_solution: routing_tables) -> routing_tables:
+        """
+        Neighbourhood 3
+        Highest amount of datagrams that went through a router
+        Changes random value in the current_solution matrix and checks if this solution is possible
+
+        inputs:
+        current_solution - current best solution for the algorithm
+        G - adjacency matrix showing connections between routers and PC's
+
+        outputs:
+        current_solution - new_solution
+        """
+        current_solution_copy = copy.deepcopy(current_solution)
+        max = 0
+        for src, dst in self.network.logs['edges_weight'].items():
+            datagram_count = 0
+            for value in dst.values():
+                datagram_count += value
+            if datagram_count > max:
+                start_index = src
+                max = datagram_count
+        while True:
+            router_connection_to_change = start_index
+            endpoint_directory_to_change = random.choice(list(current_solution[router_connection_to_change].keys()))
+            new_directory = random.choice(list(self.network.routers.keys()))
+            previous_directory = current_solution_copy[router_connection_to_change][endpoint_directory_to_change]
+            #checking if there is connection between router y and new directory
+            if self.adjmatrix[router_connection_to_change][new_directory] == 1:
+                #checking if new solution is acyclic
+                current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = new_directory
+                if self.is_acyclic(current_solution_copy):
+                    current_solution[router_connection_to_change][endpoint_directory_to_change] = new_directory
+                    return current_solution
+                else:
+                    current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
+
+    def run_model(self, t0: float = 1000000, t1: float = 0.000001, alpha: float = 0.95, epoch_size: int = 100, event=None, neighbourhood:callable = change_solution()):
         """
         Minimizes loss function using simulated annealing
 
@@ -146,7 +219,7 @@ class OptimizationModel:
         while t1 < t:
             epoch_size = num_epochs(it)
             for _ in range(epoch_size):
-                x1 = self.change_solution(x)
+                x1 = neighbourhood(x)
                 self.network.load_routing_tables(x1)
                 new_loss = self.network.simulate()
                 if new_loss < previous_loss:
