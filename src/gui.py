@@ -132,16 +132,32 @@ class GraphFrame(customtkinter.CTkFrame):
         super().__init__(*args, **kwargs)
 
         self._corner_radius=0
-        # self._fg_color="#FF0000"
+        # self._fg_color="#FF0000" 
 
 
+        self.canvas = tk.Canvas(self, width=500, height=500)
+        self.canvas.pack()
 
-        # G = nx.petersen_graph()
-        # subax1 = plt.subplot(121)
-        # nx.draw(G, with_labels=True, font_weight='bold')
-        # subax2 = plt.subplot(122)
-        # nx.draw_shell(G, nlist=[range(5, 10), range(5)], with_labels=True, font_weight='bold')
-        # plt.show()
+        self.fig = Figure(figsize=(5, 5))
+        self.figure_canvas = FigureCanvasTkAgg(self.fig, self.canvas)
+        self.figure_canvas.draw()
+        self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
+
+
+        G = nx.complete_graph(4)
+        self.is_running = False
+        self.draw_graph(G)
+
+    def draw_graph(self, G):
+        if self.is_running:
+            return
+        self.is_running = True
+        self.fig.clear()
+        ax = self.fig.add_subplot(111)
+        
+        nx.draw(G, ax=ax, with_labels=True, font_weight='bold')
+
+        self.fig.canvas.draw()
 
 
 
@@ -286,40 +302,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         
         t1.start()
         t2.start()
-
-        # t1.join()
-        # t2.join()
-
-        # Model.network.reset_state(with_schedule=True, with_devices=True)
-
-
-        # fig = plt.Figure(figsize=(5, 4), dpi=100)
-        # ax = fig.add_subplot(111)
-        # ax.plot(cost_array)
-        # plot1 = FigureCanvasTkAgg(fig, self)
-        # plot1.get_tk_widget().pack(side=tkinter.LEFT, fill=tkinter.BOTH)
-        # ax.legend(['legend'])
-        # ax.set_xlabel('x label')
-        # ax.set_title('title')
-
-
-
-        # figure2 = plt.Figure(figsize=(15, 14), dpi=100)
-        # ax2 = figure2.add_subplot(111)
-        # line2 = FigureCanvasTkAgg(figure2, self)
-        # line2.get_tk_widget().pack()
-        # # df = df[['x', 'y']].groupby('year').sum()
-        # df.plot(kind='line', legend=True, ax=ax2, color='r', marker='o', fontsize=10)
-        # ax2.set_title('Year Vs. Unemployment Rate')
-
-        # plt.figure()
-        # plt.plot(np.linspace(1, it, it), cost_array)
-        # plt.xlabel('Iterations')
-        # plt.ylabel('Loss function value')
-        # plt.show()
-
         
-
 
 
 class NavigationFrame(customtkinter.CTkFrame):
