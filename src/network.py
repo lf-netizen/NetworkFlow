@@ -15,7 +15,9 @@ class Network:
         self.r_it = self.routers.values()
         self.e_it = self.endpoints.values()
 
-        self.logs = {'edges_weight': {d.id: {} for d in chain(self.r_it, self.e_it)}}
+        self.logs = {'edges_weight': {d.id: {} for d in chain(self.r_it, self.e_it)}, 
+                     'queue_status': {r.id: [] for r in self.r_it}
+                    }
 
     def load_routing_tables(self, routing_tables) -> None:
         for id, rt in routing_tables.items():
@@ -30,7 +32,9 @@ class Network:
     def reset_state(self, with_schedule: bool = True, with_devices: bool = False) -> None:
         timer.time = 0
         self.datagrams = []
-        self.logs = {'edges_weight': {d.id: {} for d in chain(self.r_it, self.e_it)}}
+        self.logs = {'edges_weight': {d.id: {} for d in chain(self.r_it, self.e_it)}, 
+                     'queue_status': {r.id: [] for r in self.r_it}
+                    }
         for device in chain(self.r_it, self.e_it):
             device.reset()
         if not with_schedule:
@@ -86,6 +90,10 @@ class Network:
                 else:
                     self.endpoints[id].receive_datagram(dg)
                     received_datagrams += 1
+
+            # logging router queue status
+            for r in self.r_it:
+                self.logs['queue_status'][r.id].append(len(r.queue.queue))
 
         # calculate loss function
         total_time = 0
