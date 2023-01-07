@@ -161,7 +161,7 @@ class OptimizationModel:
                 cost.append(previous_loss)
 
                 # for chart generation
-                if not len(cost) % 150:
+                if event is not None and not len(cost) % 150:
                     self.log_queue.put(cost)
                     event.wait()
                     event.clear()
