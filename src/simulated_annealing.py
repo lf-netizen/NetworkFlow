@@ -131,16 +131,19 @@ class OptimizationModel:
         current_solution_copy = copy.deepcopy(current_solution)
         max = 0
         for src, dst in self.network.logs['edges_weight'].items():
-            curr_max = np.max(dst.values())
-            if curr_max > max:
-                start_index = src
-                end_index =  [k for k, v in dst.items() if v == np.max(dst.values())][0]
-                max = curr_max
+            if src in self.network.r_it:
+                curr_max = np.max(dst.values())
+                if curr_max > max:
+                    end_index = src
+                    max = curr_max
+        try:
+            previous_directory = end_index
+        except:
+            return self.change_solution(current_solution)
         while True:
-            router_connection_to_change = start_index
+            router_connection_to_change = random.choice(list(current_solution.keys()))
             endpoint_directory_to_change = random.choice(list(current_solution[router_connection_to_change].keys()))
             new_directory = random.choice(list(self.network.routers.keys()))
-            previous_directory = end_index
             #checking if there is connection between router y and new directory
             if self.adjmatrix[router_connection_to_change][new_directory] == 1:
                 #checking if new solution is acyclic
@@ -165,18 +168,24 @@ class OptimizationModel:
         current_solution_copy = copy.deepcopy(current_solution)
         max = 0
         for src, dst in self.network.logs['edges_weight'].items():
-            datagram_count = 0
-            for value in dst.values():
-                datagram_count += value
-            if datagram_count > max:
-                end_index = src
-                max = datagram_count
-        changeable_directories = []
-        for start_id, table in current_solution.items():
-            for endpoint_id, target_id in table.items():
-                if target_id == end_index:
-                    changeable_directories.append([start_id, endpoint_id])
-        [chosen_start_id, chosen_endpoint_id] = random.choice(changeable_directories)
+            if src in self.network.r_it:
+                datagram_count = 0
+                for value in dst.values():
+                    datagram_count += value
+                if datagram_count >= max:
+                    end_index = src
+                    max = datagram_count
+        try:
+            changeable_directories = []
+            for start_id, table in current_solution.items():
+                for endpoint_id, target_id in table.items():
+                    if target_id == end_index:
+                        changeable_directories.append([start_id, endpoint_id])
+            if len(changeable_directories) == 0:
+                return self.change_solution(current_solution)
+            [chosen_start_id, chosen_endpoint_id] = random.choice(changeable_directories)
+        except:
+            return self.change_solution(current_solution)
         while True:
             router_connection_to_change = chosen_start_id
             endpoint_directory_to_change = chosen_endpoint_id
@@ -349,7 +358,7 @@ class OptimizationModel:
             epoch_size = num_epochs(it)
             for _ in range(epoch_size):
                 #fun = random.choice(list(neighbourhoods_active))
-                x1 = self.change_solution4(x)
+                x1 = self.change_solution3(x)
                 self.network.load_routing_tables(x1)
                 new_loss = self.network.simulate()
                 if new_loss < previous_loss:
