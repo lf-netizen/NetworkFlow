@@ -87,7 +87,7 @@ class OptimizationModel:
                         visited.append(next_router_id)
         return True
 
-    def change_solution(self, current_solution: routing_tables) -> routing_tables:
+    def change_solution(self, current_solution: routing_tables,logs:Dict) -> routing_tables:
         """
         Neighbourhood 1
         Changes random value in the current_solution matrix and checks if this solution is possible
@@ -139,7 +139,7 @@ class OptimizationModel:
         try:
             previous_directory = end_index
         except:
-            return self.change_solution(current_solution)
+            return self.change_solution(current_solution,logs)
         while True:
             router_connection_to_change = random.choice(list(current_solution.keys()))
             endpoint_directory_to_change = random.choice(list(current_solution[router_connection_to_change].keys()))
@@ -182,10 +182,10 @@ class OptimizationModel:
                     if target_id == end_index:
                         changeable_directories.append([start_id, endpoint_id])
             if len(changeable_directories) == 0:
-                return self.change_solution(current_solution)
+                return self.change_solution(current_solution,logs)
             [chosen_start_id, chosen_endpoint_id] = random.choice(changeable_directories)
         except:
-            return self.change_solution(current_solution)
+            return self.change_solution(current_solution,logs)
         while True:
             router_connection_to_change = chosen_start_id
             endpoint_directory_to_change = chosen_endpoint_id
@@ -225,7 +225,7 @@ class OptimizationModel:
                 if target_id == end_index:
                     changeable_directories.append([start_id, endpoint_id])
         if len(changeable_directories) == 0:
-            return self.change_solution(current_solution)
+            return self.change_solution(current_solution,logs)
         [chosen_start_id, chosen_endpoint_id] = changeable_directories[random.randrange(0,len(changeable_directories))]
         while True:
             router_connection_to_change = chosen_start_id
@@ -268,10 +268,10 @@ class OptimizationModel:
                     if target_id == end_index:
                         changeable_directories.append([start_id, endpoint_id])
             if len(changeable_directories) == 0:
-                return self.change_solution(current_solution)
+                return self.change_solution(current_solution,logs)
             [chosen_start_id, chosen_endpoint_id] = changeable_directories[random.randrange(0,len(changeable_directories))]
         except:
-            return self.change_solution(current_solution)
+            return self.change_solution(current_solution,logs)
         while True:
             router_connection_to_change = chosen_start_id
             endpoint_directory_to_change = chosen_endpoint_id
@@ -310,7 +310,7 @@ class OptimizationModel:
                 if target_id == end_index:
                     changeable_directories.append([start_id, endpoint_id])
         if len(changeable_directories) == 0:
-            return self.change_solution(current_solution)
+            return self.change_solution(current_solution,logs)
         [chosen_start_id, chosen_endpoint_id] = changeable_directories[random.randrange(0,len(changeable_directories))]
         while True:
             router_connection_to_change = chosen_start_id
@@ -358,8 +358,8 @@ class OptimizationModel:
         while t1 < t:
             epoch_size = num_epochs(it)
             for _ in range(epoch_size):
-                #fun = random.choice(list(neighbourhoods_active))
-                x1 = self.change_solution6(x,previous_logs)
+                fun = random.choice(list(neighbourhoods_active))
+                x1 = fun(x,previous_logs)
                 self.network.load_routing_tables(x1)
                 new_loss = self.network.simulate()
                 if new_loss < previous_loss:
@@ -446,7 +446,7 @@ if __name__ == '__main__':
     network = Network(arch)
     network.load_schedule(schedule)
     Model = OptimizationModel(network=network, adjmatrix=adjmatrix)
-    solution, it, cost_array = Model.run_model()
+    solution, it, cost_array = Model.run_model(neighbourhoods_active={Model.change_solution,Model.change_solution3})
     plt.figure()
     plt.plot(cost_array)
     plt.xlabel('Iterations')
