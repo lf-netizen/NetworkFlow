@@ -115,7 +115,7 @@ class OptimizationModel:
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
-    def change_solution2(self, current_solution: routing_tables) -> routing_tables:
+    def change_solution2(self, current_solution: routing_tables,logs:Dict) -> routing_tables:
         """
         Neighbourhood 2
         Highest amount of datagrams that went thorugh an edge
@@ -130,7 +130,7 @@ class OptimizationModel:
         """
         current_solution_copy = copy.deepcopy(current_solution)
         max = 0
-        for src, dst in self.network.logs['edges_weight'].items():
+        for src, dst in logs['edges_weight'].items():
             if src in self.network.r_it:
                 curr_max = np.max(dst.values())
                 if curr_max > max:
@@ -154,7 +154,7 @@ class OptimizationModel:
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
-    def change_solution3(self, current_solution: routing_tables) -> routing_tables:
+    def change_solution3(self, current_solution: routing_tables,logs:Dict) -> routing_tables:
         """
         Neighbourhood 3
         Highest amount of datagrams that went through a router
@@ -167,7 +167,7 @@ class OptimizationModel:
         """
         current_solution_copy = copy.deepcopy(current_solution)
         max = 0
-        for src, dst in self.network.logs['edges_weight'].items():
+        for src, dst in logs['edges_weight'].items():
             if src in self.network.r_it:
                 datagram_count = 0
                 for value in dst.values():
@@ -202,7 +202,7 @@ class OptimizationModel:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
 
-    def change_solution4(self, current_solution: routing_tables) -> routing_tables:
+    def change_solution4(self, current_solution: routing_tables,logs:Dict) -> routing_tables:
         """
         Neighbourhood 4
         Highest average queue length in a router throughout the simulation
@@ -215,8 +215,8 @@ class OptimizationModel:
         """
         current_solution_copy = copy.deepcopy(current_solution)
         max = 0
-        for router_id in self.network.logs['queue_status']:
-            suma = np.sum(self.network.logs['queue_status'][router_id])
+        for router_id in logs['queue_status']:
+            suma = np.sum(logs['queue_status'][router_id])
             if suma >= max:
                 end_index = router_id
         changeable_directories = []
@@ -243,7 +243,7 @@ class OptimizationModel:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
 
-    def change_solution5(self, current_solution: routing_tables) -> routing_tables:
+    def change_solution5(self, current_solution: routing_tables,logs:Dict) -> routing_tables:
         """
         Neighbourhood 5
         Highest maximum queue length in a router
@@ -256,9 +256,9 @@ class OptimizationModel:
         """
         current_solution_copy = copy.deepcopy(current_solution)
         max = 0
-        for router_id in self.network.logs['queue_status']:
-            if len(self.network.logs['queue_status'][router_id]) > 0:
-                new_max = np.max(self.network.logs['queue_status'][router_id])
+        for router_id in logs['queue_status']:
+            if len(logs['queue_status'][router_id]) > 0:
+                new_max = np.max(logs['queue_status'][router_id])
                 if new_max >= max:
                     end_index = router_id
             changeable_directories = []
@@ -288,7 +288,7 @@ class OptimizationModel:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
 
-    def change_solution6(self, current_solution: routing_tables) -> routing_tables:
+    def change_solution6(self, current_solution: routing_tables,logs:Dict) -> routing_tables:
         """
         Neighbourhood 6
         Highest amount of turns where there was a queue in a router
@@ -301,8 +301,8 @@ class OptimizationModel:
         """
         current_solution_copy = copy.deepcopy(current_solution)
         max = 0
-        for router_id in self.network.logs['queue_status']:
-            if len(self.network.logs['queue_status'][router_id]) >= max:
+        for router_id in logs['queue_status']:
+            if len(logs['queue_status'][router_id]) >= max:
                 end_index = router_id
         changeable_directories = []
         for start_id, table in current_solution.items():
@@ -346,6 +346,7 @@ class OptimizationModel:
         t = t0
         it = 1
         previous_loss = self.network.simulate()
+        previous_logs = self.network.logs
         self.network.reset_state(with_schedule=False)
         cost = [previous_loss]
 
@@ -358,7 +359,7 @@ class OptimizationModel:
             epoch_size = num_epochs(it)
             for _ in range(epoch_size):
                 #fun = random.choice(list(neighbourhoods_active))
-                x1 = self.change_solution3(x)
+                x1 = self.change_solution6(x,previous_logs)
                 self.network.load_routing_tables(x1)
                 new_loss = self.network.simulate()
                 if new_loss < previous_loss:
@@ -369,6 +370,7 @@ class OptimizationModel:
                     if probability > np.random.random():
                         x = x1
                         previous_loss = new_loss
+                previous_logs = self.network.logs
                 self.network.reset_state(with_schedule=False)
                 cost.append(previous_loss)
 
