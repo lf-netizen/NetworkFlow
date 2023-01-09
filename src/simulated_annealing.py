@@ -333,13 +333,11 @@ class OptimizationModel:
     def run_model(self, t0: float = 100, t1: float = 0.01, alpha: float = 0.8, epoch_size: int = 100, neighbourhoods_active:set = {}, event=None):
         """
         Minimizes loss function using simulated annealing
-
         inputs:
         t - array of length n containing cost related to using a particular router in the path
         T0 - starting temperature in the simulated annealing algorithm
         T1 - temperature at which the algorithm stops
         alpha - parameter used to change T after every iteration
-
         outputs:
         x - solution: optimal routing table
         cost - array representing loss_function values at every iteration
@@ -353,7 +351,6 @@ class OptimizationModel:
         previous_logs = self.network.logs
         self.network.reset_state(with_schedule=False)
         cost = [previous_loss]
-
         total_iterations = int(np.log(t1/t0) / np.log(alpha))
         a = 95 / total_iterations**2
         def num_epochs(it):

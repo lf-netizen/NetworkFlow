@@ -1,0 +1,36 @@
+import numpy as np
+import random
+def generate_random_adjacency_matrix(m:int, n:int) -> np.ndarray:
+    '''
+    m: number of routers
+    n: number of computers
+    '''
+    matrix = [[0 for i in range(m+n)] for j in range(m+n)]
+    #connections between routers
+    for i in range(m):
+        for j in range(m):
+            if np.random.random() > 0.5:
+                matrix[i][j] = 1
+                matrix[j][i] = 1
+            else:
+                matrix[i][j] = 0
+                matrix[j][i] = 0
+    # connections between routers and computers
+    for i in range(n):
+        for j in range(m):
+            matrix[i+m][j] = 0
+            matrix[j][i+m] = 0
+    # connections between endpoint and gate
+    gate_ids = {}
+    for i in range(n):
+        endpoint_id = i+m
+        gate_id = random.randrange(0,m)
+        matrix[endpoint_id][gate_id] = 1
+        matrix[gate_id][endpoint_id] = 1
+        gate_ids[endpoint_id] = gate_id
+    #connections between computers
+    for i in range(n):
+        for j in range(n):
+            matrix[i+m][j+m] = 0
+    return matrix, gate_ids
+print(generate_random_adjacency_matrix(10,5)[0])
