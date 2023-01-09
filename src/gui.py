@@ -298,6 +298,7 @@ class HomeFrame(customtkinter.CTkFrame):
             if global_radio_var == 0:
                 adjmatrix, arch, schedule = model.model1()
             elif global_radio_var == 1:
+                print('dwa')
                 adjmatrix, arch, schedule = model.model2()
             elif global_radio_var == 2:
                 adjmatrix, arch, schedule = model.model3()
@@ -369,9 +370,11 @@ class GraphFrame(customtkinter.CTkFrame):
 
     
     def temp(self):
-        if self.is_running:
-            return
+        # if self.is_running:
+        #     print('ret')
+        #     return
         global graph_select
+        print('select')
         if graph_select == 1:
             print('graph')
             #self.is_running = False
@@ -379,8 +382,7 @@ class GraphFrame(customtkinter.CTkFrame):
             self.draw_graph()
 
     def change_model(self):
-        if self.is_running:
-            return
+
         global global_model
         self.G = nx.Graph()
         for i in range(0, len(global_model.adjmatrix)):
@@ -392,9 +394,7 @@ class GraphFrame(customtkinter.CTkFrame):
                     self.G.add_edge(i, j)
 
     def draw_graph(self):
-        if self.is_running:
-            return
-        self.is_running = True
+
         self.fig.clear()
         ax = self.fig.add_subplot(111)
         
@@ -667,7 +667,9 @@ class MainFrame(customtkinter.CTkFrame):
         self.select_frame_by_name("graph")
         global prev_radio_var
         global global_radio_var
+        print('testjeden')
         if prev_radio_var != global_radio_var:
+            print('testdwa')
             self.graph_frame.temp()
             prev_radio_var = global_radio_var
 
