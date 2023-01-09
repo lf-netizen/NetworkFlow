@@ -434,7 +434,6 @@ class ChartFrame(customtkinter.CTkFrame):
         global min_value
         global max_value
         global num_improvements
-        self.text_field.insert('0.0', f'min val: {min_value:.3f}, max val: {max_value:.3f}, num improvements: {num_improvements:.0f}\n')
 
     def plot_chart_event(self):
         # global prev_radio_var
@@ -494,6 +493,7 @@ class ChartInFrame(customtkinter.CTkFrame):
             if data is None:
                 print('returning - end of simulation')
                 print(min_value, max_value, num_improvements)
+                app.main_frame.chart_frame.text_field.insert('0.0', f'min val: {min_value:.3f}, max val: {max_value:.3f}, num improvements: {num_improvements:.0f}\n')
                 self.is_running = False
                 return
             min_value = min(data)
@@ -523,6 +523,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         if self.is_running:
             return
         self.is_running = True
+        app.main_frame.chart_frame.text_field.insert('0.0', 'simulation in progress...')
         
         self.Model.network.reset_state(with_schedule=False)
 
