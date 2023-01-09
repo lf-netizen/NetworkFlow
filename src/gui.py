@@ -188,20 +188,20 @@ class HomeFrame(customtkinter.CTkFrame):
 
         self.description_textbox1 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
         self.description_textbox1.grid(row=0, column=0, padx=(20, 20), pady=(25, 14), sticky="nsew")
-        self.description_textbox1.insert("0.0", "t0")
-        #self.description_textbox1.configure(state="disabled")
+        self.description_textbox1.insert("0.0", f't0 value: 10000 \n')
+        self.description_textbox1.configure(state="disabled")
         self.description_textbox2 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
         self.description_textbox2.grid(row=1, column=0, padx=(20, 20), pady=(14, 14), sticky="nsew")
-        self.description_textbox2.insert("0.0", "t1")
-        # self.description_textbox2.configure(state="disabled")
+        self.description_textbox2.insert("0.0", f't1 value: 0.0001 \n')
+        self.description_textbox2.configure(state="disabled")
         self.description_textbox3 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
         self.description_textbox3.grid(row=2, column=0, padx=(20, 20), pady=(14, 14), sticky="nsew")
-        self.description_textbox3.insert("0.0", "alpha")
-        # self.description_textbox3.configure(state="disabled")
+        self.description_textbox3.insert("0.0", f'alpha value: 0.5 \n')
+        self.description_textbox3.configure(state="disabled")
         self.description_textbox4 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
         self.description_textbox4.grid(row=3, column=0, padx=(20, 20), pady=(14, 30), sticky="nsew")
-        self.description_textbox4.insert("0.0", "epoch_size")
-        # self.description_textbox4.configure(state="disabled")
+        self.description_textbox4.insert("0.0", f'epoch_size value: 100 \n')
+        self.description_textbox4.configure(state="disabled")
 
         self.parameters_frame = customtkinter.CTkFrame(self)
         self.parameters_frame.grid(row=0, column=2, padx=20, pady=20)
@@ -209,14 +209,14 @@ class HomeFrame(customtkinter.CTkFrame):
         self.parameters_frame.grid_rowconfigure(4, weight=1)
         self.parameters_frame.grid_columnconfigure(0, weight=1)
 
-        self.parameters_slider_t0 = customtkinter.CTkSlider(self.parameters_frame, from_=10, to=500, command=self.slider_t0_event, number_of_steps=490)
+        self.parameters_slider_t0 = customtkinter.CTkSlider(self.parameters_frame, from_=0, to=8, command=self.slider_t0_event, number_of_steps=100_000)
         self.parameters_slider_t0.grid(row=0, column=0, padx=20, pady=20)
         #self.parameters_slider_1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
-        self.parameters_slider_t1 = customtkinter.CTkSlider(self.parameters_frame, from_=0.01, to=0.1, command=self.slider_t1_event, number_of_steps=99)
+        self.parameters_slider_t1 = customtkinter.CTkSlider(self.parameters_frame, from_=-8, to=0, command=self.slider_t1_event, number_of_steps=100_000)
         self.parameters_slider_t1.grid(row=1, column=0, padx=20, pady=20)
-        self.parameters_slider_alpha = customtkinter.CTkSlider(self.parameters_frame, from_=0, to=1, command=self.slider_alpha_event, number_of_steps=100)
+        self.parameters_slider_alpha = customtkinter.CTkSlider(self.parameters_frame, from_=0.001, to=0.99, command=self.slider_alpha_event, number_of_steps=1000)
         self.parameters_slider_alpha.grid(row=2, column=0, padx=20, pady=20)
-        self.parameters_slider_epoch_size = customtkinter.CTkSlider(self.parameters_frame, from_=20, to=200, command=self.slider_epoch_size_event, number_of_steps=180)
+        self.parameters_slider_epoch_size = customtkinter.CTkSlider(self.parameters_frame, from_=1, to=200, command=self.slider_epoch_size_event, number_of_steps=200)
         self.parameters_slider_epoch_size.grid(row=3, column=0, padx=20, pady=20)
         #self.parameters_slider_2.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
 
@@ -315,15 +315,17 @@ class HomeFrame(customtkinter.CTkFrame):
     def slider_t0_event(self, val):
         #self.textbox.insert('0.0', f't0 value set to: {val} \n')
         #self.description_textbox1.delete(self, 0)
+        val = np.power(10, val)
         self.description_textbox1.configure(state="normal")
-        self.description_textbox1.insert('0.0', f't0 value: {val:.2f} \n')
+        self.description_textbox1.insert('0.0', f't0 value: {val:.1f} \n')
         self.description_textbox1.configure(state="disable")
         global t0
         t0 = val
     def slider_t1_event(self, val):
         #self.textbox.insert('0.0', f't1 value set to: {val} \n')
+        val = np.power(10, val)
         self.description_textbox2.configure(state="normal")
-        self.description_textbox2.insert('0.0', f't1 value: {val:.4f} \n')
+        self.description_textbox2.insert('0.0', f't1 value: {val:.10f} \n')
         self.description_textbox2.configure(state="disable")
         global t1
         t1 = val
@@ -523,7 +525,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         if self.is_running:
             return
         self.is_running = True
-        app.main_frame.chart_frame.text_field.insert('0.0', 'simulation in progress...')
+        app.main_frame.chart_frame.text_field.insert('0.0', 'simulation in progress...\n')
         
         self.Model.network.reset_state(with_schedule=False)
 
