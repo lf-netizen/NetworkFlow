@@ -109,6 +109,12 @@ global_network.load_schedule(schedule)
 global_model = OptimizationModel(global_network, adjmatrix)
 prev_radio_var = 0
 
+t0 = 0
+t1 = 0
+alpha = 0
+epoch_size = 0
+nbhood = [0, 0, 0, 0, 0, 0]
+
 class HomeFrame(customtkinter.CTkFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -127,17 +133,23 @@ class HomeFrame(customtkinter.CTkFrame):
         self.neighbourhood_frame.grid_rowconfigure(8, weight=1)
         self.neighbourhood_frame.grid_columnconfigure(1, weight=1)
         
-        self.neighbourhood_switch_1 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 1")
+        self.switch_var1 = customtkinter.StringVar(value="on")
+        self.switch_var2 = customtkinter.StringVar(value="on")
+        self.switch_var3 = customtkinter.StringVar(value="on")
+        self.switch_var4 = customtkinter.StringVar(value="on")
+        self.switch_var5 = customtkinter.StringVar(value="on")
+        self.switch_var6 = customtkinter.StringVar(value="on")
+        self.neighbourhood_switch_1 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 1", command=self.switch1_event, variable=self.switch_var1)
         self.neighbourhood_switch_1.grid(row=0, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_2 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 2")
+        self.neighbourhood_switch_2 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 2", command=self.switch2_event, variable=self.switch_var2)
         self.neighbourhood_switch_2.grid(row=1, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_3 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 3")
+        self.neighbourhood_switch_3 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 3", command=self.switch3_event, variable=self.switch_var3)
         self.neighbourhood_switch_3.grid(row=2, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_4 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 4")
+        self.neighbourhood_switch_4 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 4", command=self.switch4_event, variable=self.switch_var4)
         self.neighbourhood_switch_4.grid(row=3, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_5 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 5")
+        self.neighbourhood_switch_5 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 5", command=self.switch5_event, variable=self.switch_var5)
         self.neighbourhood_switch_5.grid(row=4, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_6 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 6")
+        self.neighbourhood_switch_6 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 6", command=self.switch6_event, variable=self.switch_var6)
         self.neighbourhood_switch_6.grid(row=5, column=0, padx=20, pady=10)
         # self.neighbourhood_switch_7 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 7")
         # self.neighbourhood_switch_7.grid(row=6, column=0, padx=20, pady=10)
@@ -182,6 +194,48 @@ class HomeFrame(customtkinter.CTkFrame):
         self.textbox = customtkinter.CTkTextbox(self, width=250)
         self.textbox.grid(row=1, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
     
+    
+    def switch1_event(self):
+        global nbhood
+        print(f'sw1 {self.switch_var1.get()}')
+        if self.switch_var1.get():
+            print('1')
+            nbhood[0] = 1
+        else:
+            nbhood[0] = 0
+    def switch2_event(self):
+        global nbhood
+        if self.switch_var2.get():
+            nbhood[1] = 1
+        else:
+            nbhood[1] = 0
+    def switch3_event(self):
+        global nbhood
+        if self.switch_var3.get():
+            nbhood[2] = 1
+        else:
+            nbhood[2] = 0
+    def switch4_event(self):
+        global nbhood
+        if self.switch_var4.get():
+            nbhood[3] = 1
+        else:
+            nbhood[3] = 0
+    def switch5_event(self):
+        global nbhood
+        if self.switch_var5.get():
+            nbhood[4] = 1
+        else:
+            nbhood[4] = 0
+    def switch6_event(self):
+        global nbhood
+        if self.switch_var6.get():
+            nbhood[5] = 1
+        else:
+            nbhood[5] = 0
+
+
+
     def radio_event(self):
         global prev_radio_var
         global global_network
@@ -214,12 +268,20 @@ class HomeFrame(customtkinter.CTkFrame):
 
     def slider_t0_event(self, val):
         self.textbox.insert('0.0', f't0 value set to: {val} \n')
+        global t0
+        t0 = val
     def slider_t1_event(self, val):
         self.textbox.insert('0.0', f't1 value set to: {val} \n')
+        global t1
+        t1 = val
     def slider_alpha_event(self, val):
         self.textbox.insert('0.0', f'alpha value set to: {val} \n')
+        global alpha
+        alpha = val
     def slider_epoch_size_event(self, val):
         self.textbox.insert('0.0', f'epoch_size value set to: {val} \n')
+        global epoch_size
+        epoch_size = val
 
 
 class GraphFrame(customtkinter.CTkFrame):
@@ -304,7 +366,13 @@ class ChartFrame(customtkinter.CTkFrame):
         # self.chart.after(1000, self.chart.add_to_queue)  # schedule the add_to_queue method to be called after 1 second
 
     def plot_chart_event(self):
-        self.chart.plot_chart()
+        global t0
+        global t1
+        global alpha
+        global epoch_size
+        global nbhood
+        print(nbhood)
+        self.chart.plot_chart(t0, t1, alpha, epoch_size, nbhood)
 
 
 class ChartInFrame(customtkinter.CTkFrame):
@@ -356,14 +424,34 @@ class ChartInFrame(customtkinter.CTkFrame):
 
 
 
-    def plot_chart(self, slider_t0=100000, slider_t1=0.00001, slider_alpha=0.95, slider_epoch_size=100):        
+    def plot_chart(self, slider_t0=100000, slider_t1=0.00001, slider_alpha=0.95, slider_epoch_size=100, nbhood=[1, 0, 0, 0, 0, 0]):        
         if self.is_running:
             return
         self.is_running = True
         
         self.Model.network.reset_state(with_schedule=False)
+
+        neighbourhood = set()
+
+        if nbhood[0]:
+            neighbourhood.add(self.Model.change_solution)
+        if nbhood[1]:
+            neighbourhood.add(self.Model.change_solution2)
+        if nbhood[2]:
+            neighbourhood.add(self.Model.change_solution3)
+        if nbhood[3]:
+            neighbourhood.add(self.Model.change_solution4)
+        if nbhood[4]:
+            neighbourhood.add(self.Model.change_solution5)
+        if nbhood[5]:
+            neighbourhood.add(self.Model.change_solution6)
+        print(neighbourhood)
+
         event = threading.Event()
-        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, event, ))
+        self.is_running = True
+        # t0: float = 100, t1: float = 0.01, alpha: float = 0.95, epoch_size: int = 100,neighbourhoods_active:set = {}, event=None
+        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(100, 0.01, 0.95, 100, {self.Model.change_solution, self.Model.change_solution3}, None, ))
+        # t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, neighbourhood, event, ))
         t2 = threading.Thread(daemon=True, target=self.process_queue, args=(event, ))
         
         t1.start()
