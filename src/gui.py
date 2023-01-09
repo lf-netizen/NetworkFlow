@@ -109,10 +109,10 @@ global_network.load_schedule(schedule)
 global_model = OptimizationModel(global_network, adjmatrix)
 prev_radio_var = 0
 
-t0 = 0
-t1 = 0
-alpha = 0
-epoch_size = 0
+t0 = 100
+t1 = 0.1
+alpha = 0.8
+epoch_size = 100
 nbhood = [0, 0, 0, 0, 0, 0]
 
 class HomeFrame(customtkinter.CTkFrame):
@@ -180,14 +180,14 @@ class HomeFrame(customtkinter.CTkFrame):
         self.parameters_frame.grid_rowconfigure(4, weight=1)
         self.parameters_frame.grid_columnconfigure(0, weight=1)
 
-        self.parameters_slider_t0 = customtkinter.CTkSlider(self.parameters_frame, from_=100_000, to=1_000_000, command=self.slider_t0_event)
+        self.parameters_slider_t0 = customtkinter.CTkSlider(self.parameters_frame, from_=10, to=500, command=self.slider_t0_event, number_of_steps=490)
         self.parameters_slider_t0.grid(row=0, column=0, padx=20, pady=20)
         #self.parameters_slider_1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
-        self.parameters_slider_t1 = customtkinter.CTkSlider(self.parameters_frame, from_=0.000_001, to=0.000_1, command=self.slider_t1_event)
+        self.parameters_slider_t1 = customtkinter.CTkSlider(self.parameters_frame, from_=0.01, to=0.1, command=self.slider_t1_event, number_of_steps=99)
         self.parameters_slider_t1.grid(row=1, column=0, padx=20, pady=20)
-        self.parameters_slider_alpha = customtkinter.CTkSlider(self.parameters_frame, from_=0, to=1, command=self.slider_alpha_event)
+        self.parameters_slider_alpha = customtkinter.CTkSlider(self.parameters_frame, from_=0, to=1, command=self.slider_alpha_event, number_of_steps=100)
         self.parameters_slider_alpha.grid(row=2, column=0, padx=20, pady=20)
-        self.parameters_slider_epoch_size = customtkinter.CTkSlider(self.parameters_frame, from_=1, to=50, command=self.slider_epoch_size_event)
+        self.parameters_slider_epoch_size = customtkinter.CTkSlider(self.parameters_frame, from_=20, to=200, command=self.slider_epoch_size_event, number_of_steps=180)
         self.parameters_slider_epoch_size.grid(row=3, column=0, padx=20, pady=20)
         #self.parameters_slider_2.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
 
@@ -366,12 +366,20 @@ class ChartFrame(customtkinter.CTkFrame):
         # self.chart.after(1000, self.chart.add_to_queue)  # schedule the add_to_queue method to be called after 1 second
 
     def plot_chart_event(self):
+        # global prev_radio_var
+        # global global_radio_var
+        # if prev_radio_var != global_radio_var:
+        #     self.graph_frame.temp()
+        #     prev_radio_var = global_radio_var
+
         global t0
         global t1
         global alpha
         global epoch_size
         global nbhood
         print(nbhood)
+        print(f'{t0},  {t1},  {alpha},   {epoch_size}')
+        self.chart.reload()
         self.chart.plot_chart(t0, t1, alpha, epoch_size, nbhood)
 
 
@@ -387,6 +395,14 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.figure_canvas.draw()
         self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
 
+        global global_model
+        self.Model = global_model
+        self.q = self.Model.log_queue
+
+        self.is_running = False
+
+    def reload(self):
+        global global_model
         self.Model = global_model
         self.q = self.Model.log_queue
 
@@ -445,13 +461,21 @@ class ChartInFrame(customtkinter.CTkFrame):
             neighbourhood.add(self.Model.change_solution5)
         if nbhood[5]:
             neighbourhood.add(self.Model.change_solution6)
+
+        if len(neighbourhood) == 0:
+            neighbourhood.add(self.Model.change_solution)
+            neighbourhood.add(self.Model.change_solution2)
+            neighbourhood.add(self.Model.change_solution3)
+            neighbourhood.add(self.Model.change_solution4)
+            neighbourhood.add(self.Model.change_solution5)
+            neighbourhood.add(self.Model.change_solution6)
+        
         print(neighbourhood)
 
         event = threading.Event()
         self.is_running = True
         # t0: float = 100, t1: float = 0.01, alpha: float = 0.95, epoch_size: int = 100,neighbourhoods_active:set = {}, event=None
-        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(100, 0.01, 0.95, 100, {self.Model.change_solution, self.Model.change_solution3}, event))
-        # t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, neighbourhood, event, ))
+        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, neighbourhood, event))
         t2 = threading.Thread(daemon=True, target=self.process_queue, args=(event, ))
         
         t1.start()
