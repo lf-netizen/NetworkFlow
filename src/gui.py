@@ -116,6 +116,11 @@ alpha = 0.8
 epoch_size = 100
 nbhood = [0, 0, 0, 0, 0, 0]
 
+# results of simulation to display
+min_value = None
+max_value = None
+num_improvements = None
+
 class HomeFrame(customtkinter.CTkFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -459,8 +464,6 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.Model = global_model
         self.q = self.Model.log_queue
 
-        self.is_running = False
-
     def draw_graph(self, data):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
@@ -468,12 +471,18 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.fig.canvas.draw()
 
     def process_queue(self, event):
+        global min_value, max_value, num_improvements
         while True:
             data = self.q.get(block=True)
             if data is None:
                 print('returning - end of simulation')
+                print(min_value, max_value, num_improvements)
                 self.is_running = False
                 return
+            min_value = min(data)
+            max_value = max(data)
+            num_improvements = sum(prev < next for prev, next in zip(data[:-1], data[1:]))
+
             self.draw_graph(data)
             event.set()
 
