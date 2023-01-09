@@ -171,7 +171,7 @@ class HomeFrame(customtkinter.CTkFrame):
         self.start_graph_radio_2.grid(row=1, column=0, padx=20, pady=10)
         self.start_graph_radio_3 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=2, text="graph 3")
         self.start_graph_radio_3.grid(row=2, column=0, padx=20, pady=10)
-        self.start_graph_radio_4 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=3, text="graph 4")
+        self.start_graph_radio_4 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=3, text="my_model")
         self.start_graph_radio_4.grid(row=3, column=0, padx=20, pady=10)
         
 
@@ -342,7 +342,7 @@ class GraphFrame(customtkinter.CTkFrame):
         super().__init__(*args, **kwargs)
 
         self._corner_radius=0
-        # self._fg_color="#FF0000" 
+        # self._fg_color="#FF0000"
 
 
         self.canvas = tk.Canvas(self, width=500, height=500)
@@ -364,10 +364,12 @@ class GraphFrame(customtkinter.CTkFrame):
 
     
     def temp(self):
+        if self.is_running:
+            return
         global graph_select
         if graph_select == 1:
             print('graph')
-            self.is_running = False
+            #self.is_running = False
             self.change_model()
             self.draw_graph()
 
@@ -459,7 +461,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.Model = global_model
         self.q = self.Model.log_queue
 
-        self.is_running = False
+        #self.is_running = False
 
     def draw_graph(self, data):
         self.fig.clear()
@@ -666,17 +668,6 @@ class App(customtkinter.CTk):
         # display
         self.main_frame = MainFrame(self)
         self.main_frame.grid(row=0, column=0, sticky="nsew")
-
-        # global radio_var
-        # print(radio_var)
-
-# adjmatrix, arch, schedule = load_model()
-# global_network.reset_state(True, True)
-# global_network = Network(arch)
-# global_network.load_schedule(schedule)
-# global_model = OptimizationModel(global_network, adjmatrix)
-
-
 
 
 if __name__ == "__main__":
