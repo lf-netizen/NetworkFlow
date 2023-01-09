@@ -352,7 +352,7 @@ class OptimizationModel:
         self.network.reset_state(with_schedule=False)
         cost = [previous_loss]
         total_iterations = int(np.log(t1/t0) / np.log(alpha))
-        a = 95 / total_iterations**2
+        a = (epoch_size-5) / total_iterations**2
         def num_epochs(it):
             return int(a*it**2 + 5)
         
