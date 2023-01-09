@@ -32,5 +32,14 @@ def generate_random_adjacency_matrix(m:int, n:int) -> np.ndarray:
     for i in range(n):
         for j in range(n):
             matrix[i+m][j+m] = 0
-    return matrix, gate_ids
-print(generate_random_adjacency_matrix(10,5)[0])
+    #generate network architecture
+    arch = {
+        'routers': [],
+        'endpoints': []
+    }
+    for i in range(m):
+        arch['routers'].append({'id': i, 'transmission_capacity':  random.choice([5,10,15])})
+    for endpoint_id, gate_id in gate_ids.items():
+        arch['endpoints'].append({'id': endpoint_id, 'gate_id': gate_id},)
+    return matrix, arch
+print(generate_random_adjacency_matrix(10,5))
