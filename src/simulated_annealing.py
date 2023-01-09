@@ -204,7 +204,6 @@ class OptimizationModel:
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
-
     def change_solution4(self, current_solution: routing_tables,logs:Dict) -> routing_tables:
         """
         Neighbourhood 4
@@ -244,7 +243,6 @@ class OptimizationModel:
                     return current_solution
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
-
 
     def change_solution5(self, current_solution: routing_tables,logs:Dict) -> routing_tables:
         """
@@ -290,7 +288,6 @@ class OptimizationModel:
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
 
-
     def change_solution6(self, current_solution: routing_tables,logs:Dict) -> routing_tables:
         """
         Neighbourhood 6
@@ -330,6 +327,7 @@ class OptimizationModel:
                     return current_solution
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
+
     def run_model(self, t0: float = 100, t1: float = 0.01, alpha: float = 0.8, epoch_size: int = 100, neighbourhoods_active:set = {}, event=None):
         """
         Minimizes loss function using simulated annealing
@@ -355,7 +353,7 @@ class OptimizationModel:
         a = (epoch_size-5) / total_iterations**2
         def num_epochs(it):
             return int(a*it**2 + 5)
-        
+
         while t1 < t:
             epoch_size = num_epochs(it)
             for _ in range(epoch_size):
