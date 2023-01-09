@@ -3,6 +3,9 @@ from custom_types import Time, ID
 from devices import Router, Endpoint, IDevice
 from datagram import Datagram, TerminationError
 import timer
+import copy
+testval = 1000
+global_logs = {}
 
 class Network:
     def __init__(self, arch) -> None:
@@ -111,7 +114,12 @@ class Network:
                     if dst not in self.logs['edges_weight'][src]:
                         self.logs['edges_weight'][src][dst] = 0
                     self.logs['edges_weight'][src][dst] += 1
-                    
+        
+        global global_logs
+        global_logs = copy.deepcopy(self.logs['edges_weight'])
+        print('in')
+        print(global_logs)
+
         return loss
 
 

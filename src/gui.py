@@ -3,6 +3,9 @@ import customtkinter
 import os
 import sys
 import pandas as pd
+import random
+from network import global_logs
+from network import testval
 from PIL import Image
 # graph
 import matplotlib.pyplot as plt
@@ -25,7 +28,7 @@ customtkinter.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 # load required images
-
+gl_logs = global_logs
 # load images with light and dark mode image
 image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_images")
 logo_image = customtkinter.CTkImage(Image.open(os.path.join(image_path, "CustomTkinter_logo_single.png")), size=(26, 26))
@@ -44,6 +47,7 @@ home_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "home
 graph_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "neural-network.png")), size=(30, 30))
 chart_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "line-chart.png")), size=(30, 30))
 
+simulation_ended = False
 global_radio_var = 0
 graph_select = 0
 def load_model():
@@ -403,6 +407,32 @@ class GraphFrame(customtkinter.CTkFrame):
         nx.draw(self.G, ax=ax, with_labels=True, font_weight='bold')
 
         self.fig.canvas.draw()
+    
+    def draw_graph_with_colors(self):
+        self.fig.clear()
+        ax = self.fig.add_subplot(111)
+        print('colors')
+        # pos = nx.spring_layout(self.G)
+        global global_model
+        global gl_logs
+
+        print(global_model.network.logs['edges_weight'])
+        print(gl_logs)
+        print(testval)
+
+        nx.draw(self.G, ax=ax, edgelist=self.G.edges(), with_labels=True, font_weight='bold')
+        # , edge_color=weights
+        # G = nx.gnp_random_graph(10,0.3)
+        # for u,v,d in G.edges(data=True):
+        #     d['weight'] = random.random()
+
+        # edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
+
+        # pos = nx.spring_layout(G)
+        # nx.draw(G, pos, node_color='b', edgelist=edges, edge_color=weights, width=10.0, edge_cmap=plt.cm.Blues)
+
+
+        self.fig.canvas.draw()        
 
 
 
@@ -433,9 +463,11 @@ class ChartFrame(customtkinter.CTkFrame):
 
     def plot_chart_button_event(self):
         self.plot_chart_event()
+        global simulation_ended
         global min_value
         global max_value
         global num_improvements
+        simulation_ended = True
 
     def plot_chart_event(self):
         # global prev_radio_var
@@ -502,6 +534,7 @@ class ChartInFrame(customtkinter.CTkFrame):
             max_value = max(data)
             num_improvements = sum(prev < next for prev, next in zip(data[:-1], data[1:]))
 
+            
             self.draw_graph(data)
             event.set()
 
@@ -556,7 +589,6 @@ class ChartInFrame(customtkinter.CTkFrame):
 
         event = threading.Event()
         self.is_running = True
-        # t0: float = 100, t1: float = 0.01, alpha: float = 0.95, epoch_size: int = 100,neighbourhoods_active:set = {}, event=None
         t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, neighbourhood, event))
         t2 = threading.Thread(daemon=True, target=self.process_queue, args=(event, ))
         
@@ -642,6 +674,9 @@ class MainFrame(customtkinter.CTkFrame):
         # select default frame
         self.select_frame_by_name("home")
 
+    # def graph_with_colors(self):
+    #     self.char
+
     def select_frame_by_name(self, name):
         # set button color for selected button
         self.home_button.configure(fg_color=("gray75", "gray25") if name == "home" else "transparent")
@@ -670,11 +705,19 @@ class MainFrame(customtkinter.CTkFrame):
         self.select_frame_by_name("graph")
         global prev_radio_var
         global global_radio_var
+        global simulation_ended
         print('testjeden')
-        if prev_radio_var != global_radio_var:
+        if simulation_ended:
+            print('sim_end')
+            self.graph_frame.draw_graph_with_colors()
+
+        elif prev_radio_var != global_radio_var:
             print('testdwa')
             self.graph_frame.temp()
             prev_radio_var = global_radio_var
+        
+
+
 
     def chart_button_event(self):
         self.select_frame_by_name("chart")
