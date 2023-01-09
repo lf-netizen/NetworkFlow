@@ -1,23 +1,5 @@
-import tkinter
-import customtkinter
-import os
-import sys
-import pandas as pd
-from PIL import Image
-# graph
-import matplotlib.pyplot as plt
-import networkx as nx
-import simulated_annealing
-from simulated_annealing import OptimizationModel
-from network import Network
 from custom_types import ID
 import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-import queue
-import tkinter as tk
-import time
-import threading
 
 
 def model1():

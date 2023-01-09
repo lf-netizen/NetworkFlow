@@ -19,6 +19,7 @@ import tkinter as tk
 import time
 import threading
 import model
+import my_model
 
 customtkinter.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -124,7 +125,7 @@ class HomeFrame(customtkinter.CTkFrame):
 
         # create 2x2 grid system
         self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
 
 
         self.neighbourhood_frame = customtkinter.CTkFrame(self)
@@ -174,8 +175,31 @@ class HomeFrame(customtkinter.CTkFrame):
         self.start_graph_radio_4.grid(row=3, column=0, padx=20, pady=10)
         
 
+        self.description_frame = customtkinter.CTkFrame(self)
+        self.description_frame.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
+
+        self.description_frame.grid_rowconfigure(3, weight=1)
+        self.description_frame.grid_columnconfigure(0, weight=1)
+
+        self.description_textbox1 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
+        self.description_textbox1.grid(row=0, column=0, padx=(20, 20), pady=(25, 14), sticky="nsew")
+        self.description_textbox1.insert("0.0", "t0")
+        #self.description_textbox1.configure(state="disabled")
+        self.description_textbox2 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
+        self.description_textbox2.grid(row=1, column=0, padx=(20, 20), pady=(14, 14), sticky="nsew")
+        self.description_textbox2.insert("0.0", "t1")
+        # self.description_textbox2.configure(state="disabled")
+        self.description_textbox3 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
+        self.description_textbox3.grid(row=2, column=0, padx=(20, 20), pady=(14, 14), sticky="nsew")
+        self.description_textbox3.insert("0.0", "alpha")
+        # self.description_textbox3.configure(state="disabled")
+        self.description_textbox4 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
+        self.description_textbox4.grid(row=3, column=0, padx=(20, 20), pady=(14, 30), sticky="nsew")
+        self.description_textbox4.insert("0.0", "epoch_size")
+        # self.description_textbox4.configure(state="disabled")
+
         self.parameters_frame = customtkinter.CTkFrame(self)
-        self.parameters_frame.grid(row=0, column=1, padx=20, pady=20)
+        self.parameters_frame.grid(row=0, column=2, padx=20, pady=20)
 
         self.parameters_frame.grid_rowconfigure(4, weight=1)
         self.parameters_frame.grid_columnconfigure(0, weight=1)
@@ -191,9 +215,25 @@ class HomeFrame(customtkinter.CTkFrame):
         self.parameters_slider_epoch_size.grid(row=3, column=0, padx=20, pady=20)
         #self.parameters_slider_2.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
 
-        self.textbox = customtkinter.CTkTextbox(self, width=250)
-        self.textbox.grid(row=1, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
-    
+        self.textbox = customtkinter.CTkTextbox(self, width=200)
+        self.textbox.grid(row=1, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew")
+
+        self.upload_model_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text=" Upload new model",
+                                                   fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+                                                   anchor="w", command=self.upload_model_button_event, 
+                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.upload_model_button.grid(row=1, column=2, sticky="ew")
+
+    def upload_model_button_event(self):
+        text = self.textbox.get("0.0", "end")
+
+        # filepath = os.getcwd()
+        # def MakeFile(file_name):
+        #     temp_path = filepath + file_name
+        with open('src/my_model.py', 'w') as f:
+            f.write(f'from custom_types import ID\nimport numpy as np\n{text}')
+            #print('Execution completed.')
+        # print(text)
     
     def switch1_event(self):
         global nbhood
@@ -257,7 +297,7 @@ class HomeFrame(customtkinter.CTkFrame):
             elif global_radio_var == 2:
                 adjmatrix, arch, schedule = model.model3()
             else:
-                adjmatrix, arch, schedule = model.model1()
+                adjmatrix, arch, schedule = my_model.model()
             global_network = Network(arch)
             global_network.load_schedule(schedule)
             global_model = OptimizationModel(global_network, adjmatrix)
@@ -267,19 +307,32 @@ class HomeFrame(customtkinter.CTkFrame):
         print("radiobutton toggled, current value:", self.radio_var.get())
 
     def slider_t0_event(self, val):
-        self.textbox.insert('0.0', f't0 value set to: {val} \n')
+        #self.textbox.insert('0.0', f't0 value set to: {val} \n')
+        #self.description_textbox1.delete(self, 0)
+        self.description_textbox1.configure(state="normal")
+        self.description_textbox1.insert('0.0', f't0 value: {val:.2f} \n')
+        self.description_textbox1.configure(state="disable")
         global t0
         t0 = val
     def slider_t1_event(self, val):
-        self.textbox.insert('0.0', f't1 value set to: {val} \n')
+        #self.textbox.insert('0.0', f't1 value set to: {val} \n')
+        self.description_textbox2.configure(state="normal")
+        self.description_textbox2.insert('0.0', f't1 value: {val:.4f} \n')
+        self.description_textbox2.configure(state="disable")
         global t1
         t1 = val
     def slider_alpha_event(self, val):
-        self.textbox.insert('0.0', f'alpha value set to: {val} \n')
+        #self.textbox.insert('0.0', f'alpha value set to: {val} \n')
+        self.description_textbox3.configure(state="normal")
+        self.description_textbox3.insert('0.0', f'alpha value: {val:.2f} \n')
+        self.description_textbox3.configure(state="disable")
         global alpha
         alpha = val
     def slider_epoch_size_event(self, val):
-        self.textbox.insert('0.0', f'epoch_size value set to: {val} \n')
+        #self.textbox.insert('0.0', f'epoch_size value set to: {val} \n')
+        self.description_textbox4.configure(state="normal")
+        self.description_textbox4.insert('0.0', f'epoch_size value: {val:.0f} \n')
+        self.description_textbox4.configure(state="disable")
         global epoch_size
         epoch_size = val
 
