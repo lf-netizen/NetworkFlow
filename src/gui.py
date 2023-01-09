@@ -450,7 +450,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         event = threading.Event()
         self.is_running = True
         # t0: float = 100, t1: float = 0.01, alpha: float = 0.95, epoch_size: int = 100,neighbourhoods_active:set = {}, event=None
-        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(100, 0.01, 0.95, 100, {self.Model.change_solution, self.Model.change_solution3}, None, ))
+        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(100, 0.01, 0.95, 100, {self.Model.change_solution, self.Model.change_solution3}, event))
         # t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, neighbourhood, event, ))
         t2 = threading.Thread(daemon=True, target=self.process_queue, args=(event, ))
         

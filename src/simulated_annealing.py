@@ -330,7 +330,7 @@ class OptimizationModel:
                     return current_solution
                 else:
                     current_solution_copy[router_connection_to_change][endpoint_directory_to_change] = previous_directory
-    def run_model(self, t0: float = 100, t1: float = 0.01, alpha: float = 0.8, epoch_size: int = 100,neighbourhoods_active:set = {}, event=None):
+    def run_model(self, t0: float = 100, t1: float = 0.01, alpha: float = 0.8, epoch_size: int = 100, neighbourhoods_active:set = {}, event=None):
         """
         Minimizes loss function using simulated annealing
 
@@ -379,10 +379,10 @@ class OptimizationModel:
                 cost.append(previous_loss)
 
                 # for chart generation
-                # if event is not None and not len(cost) % 150:
-                #     self.log_queue.put(cost)
-                #     event.wait()
-                #     event.clear()
+                if event is not None and not len(cost) % 150:
+                    self.log_queue.put(cost)
+                    event.wait()
+                    event.clear()
                     
             it += 1
             t = t * alpha
