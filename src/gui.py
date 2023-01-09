@@ -411,19 +411,30 @@ class ChartFrame(customtkinter.CTkFrame):
         self._corner_radius=0
         # self._fg_color="#00FF00"
 
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(3, weight=1)
+        self.grid_columnconfigure(3, weight=1)
 
         self.button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text=" Generate Chart",
                                                    fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-                                                   image=home_image, anchor="w", command=self.plot_chart_event, 
+                                                   image=home_image, anchor="w", command=self.plot_chart_button_event, 
                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
         self.button.grid(row=0, column=0, sticky="ew")
+
+        self.text_field = customtkinter.CTkTextbox(self, width=500, height=20, activate_scrollbars=False)
+        self.text_field.grid(row=1, column=0, columnspan=2, padx=(20, 20), pady=(25, 14), sticky="nsew")
+        #self.text_field.insert("0.0", "t0")
 
         self.chart = ChartInFrame(self)
         self.chart.grid(row=0, column=1)
         # self.chart.after(0, self.chart.process_queue)
         # self.chart.after(1000, self.chart.add_to_queue)  # schedule the add_to_queue method to be called after 1 second
+
+    def plot_chart_button_event(self):
+        self.plot_chart_event()
+        global min_value
+        global max_value
+        global num_improvements
+        self.text_field.insert('0.0', f'min val: {min_value:.3f}, max val: {max_value:.3f}, num improvements: {num_improvements:.0f}\n')
 
     def plot_chart_event(self):
         # global prev_radio_var
@@ -437,10 +448,12 @@ class ChartFrame(customtkinter.CTkFrame):
         global alpha
         global epoch_size
         global nbhood
-        print(nbhood)
-        print(f'{t0},  {t1},  {alpha},   {epoch_size}')
+
+        # print(nbhood)
+        # print(f'{t0},  {t1},  {alpha},   {epoch_size}')
         self.chart.reload()
         self.chart.plot_chart(t0, t1, alpha, epoch_size, nbhood)
+
 
 
 class ChartInFrame(customtkinter.CTkFrame):
