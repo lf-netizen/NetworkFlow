@@ -18,6 +18,7 @@ import queue
 import tkinter as tk
 import time
 import threading
+import model
 
 customtkinter.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -42,8 +43,71 @@ home_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "home
 graph_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "neural-network.png")), size=(30, 30))
 chart_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "line-chart.png")), size=(30, 30))
 
+global_radio_var = 0
+graph_select = 0
+def load_model():
+    adjmatrix = np.array([[0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0],
+                        [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0],
+                        [1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+                        [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1],
+                        [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
+                        [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+                        [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]],dtype=object)
+    arch = {
+        'routers': [
+            {'id': 0, 'transmission_capacity':  5},
+            {'id': 1, 'transmission_capacity': 10},
+            {'id': 2, 'transmission_capacity': 10},
+            {'id': 3, 'transmission_capacity': 5},
+            {'id': 4, 'transmission_capacity': 10},
+            {'id': 5, 'transmission_capacity': 10},
+            {'id': 6, 'transmission_capacity': 5}
+        ],
+        'endpoints': [
+            {'id': 7, 'gate_id': 0},
+            {'id': 8, 'gate_id': 1},
+            {'id': 9, 'gate_id': 2},
+            {'id': 10, 'gate_id': 3}
+        ]
+    }
+    schedule = {
+        7: [
+            {'destination_id': 8,      'request_time': 2, 'priority': 2},
+            {'destination_id': [9, 10], 'request_time': 4, 'priority': 2},
+            {'destination_id': 9,      'request_time': 3, 'priority': 1}
+        ],
+        8: [
+            {'destination_id': 7,      'request_time': 1, 'priority': 2},
+            {'destination_id': 9, 'request_time': 2, 'priority': 2},
+            {'destination_id': 10,      'request_time': 3, 'priority': 1}
+        ],
+        9: [
+            {'destination_id': 7, 'request_time': 5, 'priority': 2},
+            {'destination_id': 8, 'request_time': 3, 'priority': 1}
+        ],
+        10: [
+            {'destination_id': 7, 'request_time': 4, 'priority': 2},
+            {'destination_id': 8, 'request_time': 6, 'priority': 2},
+            {'destination_id': 9, 'request_time': 3, 'priority': 1}
+        ]
+    }
+
+    # example pipeline
+    return adjmatrix, arch, schedule
+    # network = Network(arch)
+    # network.load_schedule(schedule)
+    # return OptimizationModel(network=network, adjmatrix=adjmatrix)
 
 
+adjmatrix, arch, schedule = load_model()
+global_network = Network(arch)
+global_network.load_schedule(schedule)
+global_model = OptimizationModel(global_network, adjmatrix)
+prev_radio_var = 0
 
 class HomeFrame(customtkinter.CTkFrame):
     def __init__(self, *args, **kwargs):
@@ -75,10 +139,10 @@ class HomeFrame(customtkinter.CTkFrame):
         self.neighbourhood_switch_5.grid(row=4, column=0, padx=20, pady=10)
         self.neighbourhood_switch_6 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 6")
         self.neighbourhood_switch_6.grid(row=5, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_7 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 7")
-        self.neighbourhood_switch_7.grid(row=6, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_8 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 8")
-        self.neighbourhood_switch_8.grid(row=7, column=0, padx=20, pady=10)
+        # self.neighbourhood_switch_7 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 7")
+        # self.neighbourhood_switch_7.grid(row=6, column=0, padx=20, pady=10)
+        # self.neighbourhood_switch_8 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 8")
+        # self.neighbourhood_switch_8.grid(row=7, column=0, padx=20, pady=10)
 
 
         self.start_graph_frame = customtkinter.CTkFrame(self)
@@ -88,14 +152,15 @@ class HomeFrame(customtkinter.CTkFrame):
         self.start_graph_frame.grid_columnconfigure(0, weight=1)
 
         self.radio_var = tkinter.IntVar(value=0)
-        self.start_graph_radio_1 = customtkinter.CTkRadioButton(self.start_graph_frame, variable=self.radio_var, value=0, text="graph 1")
+        self.start_graph_radio_1 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=0, text="graph 1")
         self.start_graph_radio_1.grid(row=0, column=0, padx=20, pady=10)
-        self.start_graph_radio_2 = customtkinter.CTkRadioButton(self.start_graph_frame, variable=self.radio_var, value=1, text="graph 2")
+        self.start_graph_radio_2 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=1, text="graph 2")
         self.start_graph_radio_2.grid(row=1, column=0, padx=20, pady=10)
-        self.start_graph_radio_3 = customtkinter.CTkRadioButton(self.start_graph_frame, variable=self.radio_var, value=2, text="graph 3")
+        self.start_graph_radio_3 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=2, text="graph 3")
         self.start_graph_radio_3.grid(row=2, column=0, padx=20, pady=10)
-        self.start_graph_radio_4 = customtkinter.CTkRadioButton(self.start_graph_frame, variable=self.radio_var, value=3, text="graph 4")
+        self.start_graph_radio_4 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=3, text="graph 4")
         self.start_graph_radio_4.grid(row=3, column=0, padx=20, pady=10)
+        
 
         self.parameters_frame = customtkinter.CTkFrame(self)
         self.parameters_frame.grid(row=0, column=1, padx=20, pady=20)
@@ -116,6 +181,36 @@ class HomeFrame(customtkinter.CTkFrame):
 
         self.textbox = customtkinter.CTkTextbox(self, width=250)
         self.textbox.grid(row=1, column=1, padx=(20, 0), pady=(20, 0), sticky="nsew")
+    
+    def radio_event(self):
+        global prev_radio_var
+        global global_network
+        global global_model
+        global graph_select
+        global glabal_radio_var
+        global_radio_var = self.radio_var.get()
+
+        print(f'{prev_radio_var}  {global_radio_var}')
+        if prev_radio_var != global_radio_var:
+            prev_radio_var = global_radio_var
+            graph_select = 1
+            print('test')
+            global_network.reset_state(True, True)
+            if global_radio_var == 0:
+                adjmatrix, arch, schedule = model.model1()
+            elif global_radio_var == 1:
+                adjmatrix, arch, schedule = model.model2()
+            elif global_radio_var == 2:
+                adjmatrix, arch, schedule = model.model3()
+            else:
+                adjmatrix, arch, schedule = model.model1()
+            global_network = Network(arch)
+            global_network.load_schedule(schedule)
+            global_model = OptimizationModel(global_network, adjmatrix)
+            #GraphFrame.temp()
+        else:
+            graph_select = 0
+        print("radiobutton toggled, current value:", self.radio_var.get())
 
     def slider_t0_event(self, val):
         self.textbox.insert('0.0', f't0 value set to: {val} \n')
@@ -143,19 +238,45 @@ class GraphFrame(customtkinter.CTkFrame):
         self.figure_canvas.draw()
         self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
 
-
-        G = nx.complete_graph(4)
+        #global_model.adjmatrix
+        self.G = nx.Graph()
         self.is_running = False
-        self.draw_graph(G)
+        self.change_model()
 
-    def draw_graph(self, G):
+        
+        self.draw_graph()
+
+
+    
+    def temp(self):
+        global graph_select
+        if graph_select == 1:
+            print('graph')
+            self.is_running = False
+            self.change_model()
+            self.draw_graph()
+
+    def change_model(self):
+        if self.is_running:
+            return
+        global global_model
+        self.G = nx.Graph()
+        for i in range(0, len(global_model.adjmatrix)):
+            self.G.add_node(i)
+        
+        for i in range(0, len(global_model.adjmatrix)):
+            for j in range(0, len(global_model.adjmatrix)):
+                if global_model.adjmatrix[i, j] == 1:
+                    self.G.add_edge(i, j)
+
+    def draw_graph(self):
         if self.is_running:
             return
         self.is_running = True
         self.fig.clear()
         ax = self.fig.add_subplot(111)
         
-        nx.draw(G, ax=ax, with_labels=True, font_weight='bold')
+        nx.draw(self.G, ax=ax, with_labels=True, font_weight='bold')
 
         self.fig.canvas.draw()
 
@@ -198,7 +319,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.figure_canvas.draw()
         self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
 
-        self.Model = self.load_model()
+        self.Model = global_model
         self.q = self.Model.log_queue
 
         self.is_running = False
@@ -232,62 +353,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.after(2000, lambda: self.q.put(data2))
         self.after(4000, lambda: self.q.put(data3))
 
-    def load_model(self):
-        adjmatrix = np.array([[0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0],
-                            [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0],
-                            [1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
-                            [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1],
-                            [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
-                            [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
-                            [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
-                            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]],dtype=object)
-        arch = {
-            'routers': [
-                {'id': 0, 'transmission_capacity':  5},
-                {'id': 1, 'transmission_capacity': 10},
-                {'id': 2, 'transmission_capacity': 10},
-                {'id': 3, 'transmission_capacity': 5},
-                {'id': 4, 'transmission_capacity': 10},
-                {'id': 5, 'transmission_capacity': 10},
-                {'id': 6, 'transmission_capacity': 5}
-            ],
-            'endpoints': [
-                {'id': 7, 'gate_id': 0},
-                {'id': 8, 'gate_id': 1},
-                {'id': 9, 'gate_id': 2},
-                {'id': 10, 'gate_id': 3}
-            ]
-        }
-        schedule = {
-            7: [
-                {'destination_id': 8,      'request_time': 2, 'priority': 2},
-                {'destination_id': [9, 10], 'request_time': 4, 'priority': 2},
-                {'destination_id': 9,      'request_time': 3, 'priority': 1}
-            ],
-            8: [
-                {'destination_id': 7,      'request_time': 1, 'priority': 2},
-                {'destination_id': 9, 'request_time': 2, 'priority': 2},
-                {'destination_id': 10,      'request_time': 3, 'priority': 1}
-            ],
-            9: [
-                {'destination_id': 7, 'request_time': 5, 'priority': 2},
-                {'destination_id': 8, 'request_time': 3, 'priority': 1}
-            ],
-            10: [
-                {'destination_id': 7, 'request_time': 4, 'priority': 2},
-                {'destination_id': 8, 'request_time': 6, 'priority': 2},
-                {'destination_id': 9, 'request_time': 3, 'priority': 1}
-            ]
-        }
 
-        # example pipeline
-
-        network = Network(arch)
-        network.load_schedule(schedule)
-        return OptimizationModel(network=network, adjmatrix=adjmatrix)
 
 
     def plot_chart(self, slider_t0=100000, slider_t1=0.00001, slider_alpha=0.95, slider_epoch_size=100):        
@@ -297,7 +363,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         
         self.Model.network.reset_state(with_schedule=False)
         event = threading.Event()
-        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, event))
+        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, event, ))
         t2 = threading.Thread(daemon=True, target=self.process_queue, args=(event, ))
         
         t1.start()
@@ -408,6 +474,11 @@ class MainFrame(customtkinter.CTkFrame):
 
     def graph_button_event(self):
         self.select_frame_by_name("graph")
+        global prev_radio_var
+        global global_radio_var
+        if prev_radio_var != global_radio_var:
+            self.graph_frame.temp()
+            prev_radio_var = global_radio_var
 
     def chart_button_event(self):
         self.select_frame_by_name("chart")
@@ -430,6 +501,16 @@ class App(customtkinter.CTk):
         # display
         self.main_frame = MainFrame(self)
         self.main_frame.grid(row=0, column=0, sticky="nsew")
+
+        # global radio_var
+        # print(radio_var)
+
+# adjmatrix, arch, schedule = load_model()
+# global_network.reset_state(True, True)
+# global_network = Network(arch)
+# global_network.load_schedule(schedule)
+# global_model = OptimizationModel(global_network, adjmatrix)
+
 
 
 
