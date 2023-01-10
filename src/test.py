@@ -1,6 +1,6 @@
 import numpy as np
 import random
-from typing import List
+from typing import List, Dict
 ID = int
 
 def generate_random_adjacency_matrix(m: int, n: int, connection_probability: float):
@@ -123,4 +123,32 @@ def generate_fully_connected_graph(m:int, n:int, connection_probability:float):
         if fully_connected(adjmatrix, endpoint_ids):
             return adjmatrix, arch
 
-print(generate_fully_connected_graph(10,6,0.6))
+def generate_random_schedule(arch: Dict, num_of_packages: int):
+    endpoint_ids = []
+    for endpoint in arch['endpoints']:
+        endpoint_ids.append(endpoint['id'])
+    schedule = {}
+    for i in range(num_of_packages):
+        start_id = random.choice(endpoint_ids)
+        end_id = random.choice(endpoint_ids)
+        while start_id == end_id:
+            start_id = random.choice(endpoint_ids)
+            end_id = random.choice(endpoint_ids)
+        if start_id not in schedule:
+            schedule[start_id] = []
+        schedule[start_id].append({'destination_id': end_id, 'request_time': random.randrange(1,6), 'priority': random.randrange(1,4)})
+    return schedule
+
+arch = {
+    'routers': [
+        {'id': 2, 'transmission_capacity': 1},
+        {'id': 3, 'transmission_capacity': 2}
+    ],
+    'endpoints': [
+        {'id': 1, 'gate_id': 2},
+        {'id': 4, 'gate_id': 3},
+        {'id': 5, 'gate_id': 3},
+        {'id': 6, 'gate_id': 3}
+    ]
+}
+print(generate_random_schedule(arch,10))
