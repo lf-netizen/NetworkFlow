@@ -114,11 +114,6 @@ class Network:
                     if dst not in self.logs['edges_weight'][src]:
                         self.logs['edges_weight'][src][dst] = 0
                     self.logs['edges_weight'][src][dst] += 1
-        
-        global global_logs
-        global_logs = copy.deepcopy(self.logs['edges_weight'])
-        print('in')
-        print(global_logs)
 
         return loss
 

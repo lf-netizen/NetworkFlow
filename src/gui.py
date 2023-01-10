@@ -411,26 +411,23 @@ class GraphFrame(customtkinter.CTkFrame):
     def draw_graph_with_colors(self):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
-        print('colors')
         # pos = nx.spring_layout(self.G)
-        global global_model
-        global gl_logs
 
-        print(global_model.network.logs['edges_weight'])
-        print(gl_logs)
-        print(testval)
+        weights = app.main_frame.chart_frame.chart.Model.network.logs['edges_weight']
+        for u, v, d in self.G.edges(data=True):
+            try:
+                w1 = weights[u][v]
+            except:
+                w1 = 0
+            try:
+                w2 = weights[v][u]
+            except:
+                w2 = 0
+            d['weight'] = w1 + w2
 
-        nx.draw(self.G, ax=ax, edgelist=self.G.edges(), with_labels=True, font_weight='bold')
-        # , edge_color=weights
-        # G = nx.gnp_random_graph(10,0.3)
-        # for u,v,d in G.edges(data=True):
-        #     d['weight'] = random.random()
-
-        # edges,weights = zip(*nx.get_edge_attributes(G,'weight').items())
-
-        # pos = nx.spring_layout(G)
-        # nx.draw(G, pos, node_color='b', edgelist=edges, edge_color=weights, width=10.0, edge_cmap=plt.cm.Blues)
-
+        pos = nx.spring_layout(self.G)
+        edges, weights = zip(*nx.get_edge_attributes(self.G,'weight').items())
+        nx.draw(self.G, node_color='b', edgelist=edges, edge_color=weights, width=10.0, edge_cmap=plt.cm.Blues, ax=ax, with_labels=True)
 
         self.fig.canvas.draw()        
 
@@ -463,11 +460,11 @@ class ChartFrame(customtkinter.CTkFrame):
 
     def plot_chart_button_event(self):
         self.plot_chart_event()
-        global simulation_ended
+        # global simulation_ended
         global min_value
         global max_value
         global num_improvements
-        simulation_ended = True
+        # simulation_ended = True
 
     def plot_chart_event(self):
         # global prev_radio_var
@@ -521,13 +518,15 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.fig.canvas.draw()
 
     def process_queue(self, event):
-        global min_value, max_value, num_improvements
+        global min_value, max_value, num_improvements, simulation_ended
         while True:
             data = self.q.get(block=True)
             if data is None:
                 print('returning - end of simulation')
                 print(min_value, max_value, num_improvements)
                 app.main_frame.chart_frame.text_field.insert('0.0', f'min val: {min_value:.3f}, max val: {max_value:.3f}, num improvements: {num_improvements:.0f}\n')
+                simulation_ended = True
+                # app.main_frame.graph_frame.draw_graph_with_colors()
                 self.is_running = False
                 return
             min_value = min(data)
@@ -585,8 +584,6 @@ class ChartInFrame(customtkinter.CTkFrame):
             neighbourhood.add(self.Model.change_solution5)
             neighbourhood.add(self.Model.change_solution6)
         
-        print(neighbourhood)
-
         event = threading.Event()
         self.is_running = True
         t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(slider_t0, slider_t1, slider_alpha, slider_epoch_size, neighbourhood, event))
@@ -706,13 +703,13 @@ class MainFrame(customtkinter.CTkFrame):
         global prev_radio_var
         global global_radio_var
         global simulation_ended
-        print('testjeden')
+        # print('testjeden')
         if simulation_ended:
-            print('sim_end')
             self.graph_frame.draw_graph_with_colors()
+            simulation_ended = False
 
         elif prev_radio_var != global_radio_var:
-            print('testdwa')
+            # print('testdwa')
             self.graph_frame.temp()
             prev_radio_var = global_radio_var
         

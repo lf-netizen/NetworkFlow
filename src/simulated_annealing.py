@@ -381,7 +381,8 @@ class OptimizationModel:
                     
             it += 1
             t = t * alpha
-
+            
+        self.network.logs = previous_logs
         self.log_queue.put(None)
         return x, it, cost
 
