@@ -1,6 +1,21 @@
 from custom_types import ID
+from test import generate_random_schedule, generate_mean_case,generate_fully_connected_graph
 import numpy as np
 
+def dense_test_model():
+    adjmatrix, arch = generate_fully_connected_graph(m=40,n=20,connection_probability=0.8)
+    schedule = generate_random_schedule(arch=arch,num_of_packages=1000)
+    return adjmatrix, arch, schedule
+
+def sparse_test_model():
+    adjmatrix, arch = generate_fully_connected_graph(m=40,n=20,connection_probability=0.4)
+    schedule = generate_random_schedule(arch=arch,num_of_packages=1000)
+    return adjmatrix, arch, schedule
+
+def mean_test_model():
+    adjmatrix, arch = generate_mean_case(m=40,n=20,connection_probability=0.4)
+    schedule = generate_random_schedule(arch=arch,num_of_packages=1000)
+    return adjmatrix, arch, schedule
 
 def model1():
     adjmatrix = np.array([[0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0],

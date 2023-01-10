@@ -57,8 +57,8 @@ def generate_mean_case(m, n, connection_probability):
     m: number of routers in one network
     n: number of computers in one network
     '''
-    adjmatrix1, arch1 = generate_random_adjacency_matrix(m, n, connection_probability)
-    adjmatrix2, arch2 = generate_random_adjacency_matrix(m, n, connection_probability)
+    adjmatrix1, arch1 = generate_fully_connected_graph(m, n, connection_probability)
+    adjmatrix2, arch2 = generate_fully_connected_graph(m, n, connection_probability)
     matrix = [[0 for i in range(2*m + 2*n)] for j in range(2*m + 2*n)]
     # changes in routers ids
     for i in range(m):
@@ -138,17 +138,3 @@ def generate_random_schedule(arch: Dict, num_of_packages: int):
             schedule[start_id] = []
         schedule[start_id].append({'destination_id': end_id, 'request_time': random.randrange(1,6), 'priority': random.randrange(1,4)})
     return schedule
-
-arch = {
-    'routers': [
-        {'id': 2, 'transmission_capacity': 1},
-        {'id': 3, 'transmission_capacity': 2}
-    ],
-    'endpoints': [
-        {'id': 1, 'gate_id': 2},
-        {'id': 4, 'gate_id': 3},
-        {'id': 5, 'gate_id': 3},
-        {'id': 6, 'gate_id': 3}
-    ]
-}
-print(generate_random_schedule(arch,10))
