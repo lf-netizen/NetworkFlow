@@ -46,6 +46,7 @@ home_network_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_pat
 home_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "home-icon.png")), size=(28, 28))
 graph_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "neural-network.png")), size=(30, 30))
 chart_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "line-chart.png")), size=(30, 30))
+heat_map_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "color_map.png")), size=(30, 250))
 
 simulation_ended = False
 global_radio_var = 0
@@ -355,12 +356,24 @@ class GraphFrame(customtkinter.CTkFrame):
 
         self._corner_radius=0
         # self._fg_color="#FF0000"
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        self.heat_map_button = customtkinter.CTkButton(self, corner_radius=0, height=400, border_spacing=10, text=" Legend",
+                                                   fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("#d9d9d9", "#d9d9d9"),
+                                                   image=heat_map_image, anchor="w", 
+                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.heat_map_button.grid(row=0, column=1, padx=20, pady=(0, 20), sticky="ew")
+
+        # self.heat_map = customtkinter.CTkImage(heat_map_image, size=(30, 30))
+
 
 
         self.canvas = tk.Canvas(self, width=500, height=500)
-        self.canvas.pack()
+        self.canvas.grid(row=0, column=0, padx=20, pady=(0, 20))
+        #self.canvas.pack()
 
-        self.fig = Figure(figsize=(5, 5))
+        self.fig = Figure(figsize=(8, 8))
         self.figure_canvas = FigureCanvasTkAgg(self.fig, self.canvas)
         self.figure_canvas.draw()
         self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
@@ -425,9 +438,9 @@ class GraphFrame(customtkinter.CTkFrame):
                 w2 = 0
             d['weight'] = w1 + w2
 
-        pos = nx.spring_layout(self.G)
+        pos = nx.spring_layout(self.G, scale=1)
         edges, weights = zip(*nx.get_edge_attributes(self.G,'weight').items())
-        nx.draw(self.G, node_color='b', edgelist=edges, edge_color=weights, width=10.0, edge_cmap=plt.cm.Blues, ax=ax, with_labels=True)
+        nx.draw(self.G, pos, node_color='b', edgelist=edges, edge_color=weights, width=5, edge_cmap=plt.cm.RdYlBu_r, ax=ax, with_labels=True)
 
         self.fig.canvas.draw()        
 
