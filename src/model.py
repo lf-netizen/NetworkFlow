@@ -8,12 +8,12 @@ def dense_test_model():
     return adjmatrix, arch, schedule
 
 def sparse_test_model():
-    adjmatrix, arch = generate_fully_connected_graph(m=40,n=20,connection_probability=0.4)
+    adjmatrix, arch = generate_fully_connected_graph(m=40,n=20,connection_probability=0.2)
     schedule = generate_random_schedule(arch=arch,num_of_packages=1000)
     return adjmatrix, arch, schedule
 
 def mean_test_model():
-    adjmatrix, arch = generate_mean_case(m=40,n=20,connection_probability=0.4)
+    adjmatrix, arch = generate_mean_case(m=20,n=10,connection_probability=0.4)
     schedule = generate_random_schedule(arch=arch,num_of_packages=1000)
     return adjmatrix, arch, schedule
 
@@ -178,3 +178,34 @@ def model3():
     # example pipeline
 
     return adjmatrix, arch, schedule
+
+
+def dense_model_predefined():
+    pickle_in = open("models/predefined_dense_model.pkl","rb")
+    model_data = pickle.load(pickle_in)
+    return model_data['adjmatrix'], model_data['arch'], model_data['schedule']
+
+def sparse_model_predefined():
+    pickle_in = open("models/predefined_sparse_model.pkl","rb")
+    model_data = pickle.load(pickle_in)
+    return model_data['adjmatrix'], model_data['arch'], model_data['schedule']
+
+def mean_model_predefined():
+    pickle_in = open("models/predefined_mean_model.pkl","rb")
+    model_data = pickle.load(pickle_in)
+    return model_data['adjmatrix'], model_data['arch'], model_data['schedule']
+
+if __name__ == "__main__":
+    import pickle
+
+    adjmatrix, arch, schedule = mean_test_model()
+    model_data = {
+        'adjmatrix': adjmatrix,
+        'arch': arch,
+        'schedule': schedule
+    }
+    pickle_out = open("models/predefined_mean_model.pkl","wb")
+    pickle.dump(model_data, pickle_out)
+    pickle_out.close()
+
+        

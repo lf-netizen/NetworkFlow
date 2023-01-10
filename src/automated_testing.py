@@ -30,7 +30,7 @@ for it, param in enumerate(params):
     if not isinstance(param, list):
         params[it] = [param] * num_tests
 
-for it_model, model in enumerate([dense_test_model, sparse_test_model, mean_test_model]):
+for it_model, model in enumerate([dense_model_predefined, sparse_model_predefined, mean_model_predefined]):
     adjmatrix, arch, schedule = model()
     network = Network(arch)
     network.load_schedule(schedule)
