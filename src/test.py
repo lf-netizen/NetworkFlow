@@ -90,7 +90,7 @@ def generate_mean_case(m, n, connection_probability):
             if matrix[i+2*m][j] == 1:
                 arch['endpoints'].append({'id': i+2*m, 'gate_id': j})
 
-    return adjmatrix1, adjmatrix2, matrix, arch
+    return matrix, arch
 
 
 def fully_connected(adjmatrix: np.ndarray, endpoint_ids: List[int]) -> bool:
