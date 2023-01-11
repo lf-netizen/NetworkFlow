@@ -544,7 +544,7 @@ class ChartInFrame(customtkinter.CTkFrame):
                 return
             min_value = min(data)
             max_value = max(data)
-            num_improvements = sum(prev < next for prev, next in zip(data[:-1], data[1:]))
+            num_improvements = sum(prev > next for prev, next in zip(data[:-1], data[1:]))
 
             
             self.draw_graph(data)

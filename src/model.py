@@ -1,6 +1,7 @@
 from custom_types import ID
 from test import generate_random_schedule, generate_mean_case,generate_fully_connected_graph
 import numpy as np
+import pickle
 
 def dense_test_model():
     adjmatrix, arch = generate_fully_connected_graph(m=40,n=20,connection_probability=0.8)
@@ -196,8 +197,6 @@ def mean_model_predefined():
     return model_data['adjmatrix'], model_data['arch'], model_data['schedule']
 
 if __name__ == "__main__":
-    import pickle
-
     adjmatrix, arch, schedule = mean_test_model()
     model_data = {
         'adjmatrix': adjmatrix,

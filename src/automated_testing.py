@@ -8,27 +8,32 @@ from network import Network
 
 # INSTRUKCJA
 # Parametr który się zmienia w kolejnych iteracjach wrzucamy w listę. Pozostałe (które są stałe) jako floaty. 
-# num_tests odpowiada ilości testów tj. jest równy długości tej listy (albo dowolnie, kiedy chcemy testować sąsiedztwa). 
 
-num_tests = 3
-
-t0 = 10e3
+t0 = 10
 t1 = 10e-1
-alpha = [0.95, 0.9, 0.7]
+alpha = [0.95, 0.9, 0.8, 0.5, 0.3, 0.1]
 epoch_size = 10
 
 nbhoods_active = [1, 1, 1, 1, 1, 1]
 
-######
+# for plotting
+nrows = 2
+ncols = 3
+
+model_names = ('Dense model', 'Sparse model', 'Mean model')
+# NAZWA PARAMETRU /ALPHA/T0T1/EPOCHSIZE/ i current_params[?] DO ZMIANY: LINIA 60, 67, 70
+#####
 params = [t0, t1, alpha, epoch_size]
 # change params to list for convinience
 for param in params:
     if isinstance(param, list):
         num_tests = len(param)
 
+assert num_tests == nrows*ncols
+
 for it, param in enumerate(params):
     if not isinstance(param, list):
-        params[it] = [param] * num_tests
+        params[it] = [param] * nrows*ncols
 
 for it_model, model in enumerate([dense_model_predefined, sparse_model_predefined, mean_model_predefined]):
     adjmatrix, arch, schedule = model()
@@ -39,19 +44,28 @@ for it_model, model in enumerate([dense_model_predefined, sparse_model_predefine
     nbhoods = [model.change_solution, model.change_solution2, model.change_solution3, model.change_solution4, model.change_solution5, model.change_solution6]
     nbhoods = set(compress(nbhoods, nbhoods_active))
     
-    fig, axs = plt.subplots(nrows=1, ncols=num_tests, figsize=(5*num_tests, 5), sharey=True)
-    fig.suptitle(f'Model {it_model+1}; nbhoods_active={nbhoods_active}')
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(5*ncols, 5*nrows), sharey=True)
+    fig.suptitle(f'{model_names[it_model]}')
 
-    for it in range(num_tests):
-        plt.subplot(1, num_tests, it+1)
-        plt.grid()
-        curr_params = [param[it] for param in params]
-        plt.title('t0 = {}, t1 = {}, al = {}, e_s = {}'.format(*curr_params))
-        plt.xlabel('iterations')
-        plt.ylabel('loss')
-        _, iterations, cost_array = model.run_model(*curr_params, neighbourhoods_active=nbhoods)
-        model.network.reset_state(with_schedule=False)
-        axs[it].plot(cost_array)
+    print('=============================')
+    print(model_names[it_model])
+    print('param|min|max|iterations|improvements|deteriorations')
+    print('=============================')
+    for it_row in range(nrows):
+        for it_col in range(ncols):
+            curr_params = [param[it_row*nrows+it_col] for param in params]
+            _, iterations, cost_array = model.run_model(*curr_params, neighbourhoods_active=nbhoods)
+            model.network.reset_state(with_schedule=False)
+            
+            title = f'alpha = {curr_params[2]}'
+            axs[it_row, it_col].plot(cost_array)
+            axs[it_row, it_col].grid()
+            axs[it_row, it_col].set_title(title)
+            axs[it_row, it_col].set_xlabel('iterations')
+            axs[it_row, it_col].set_ylabel('loss')
+            
+            logs = [curr_params[2], min(cost_array), max(cost_array), len(cost_array), sum(prev > next for prev, next in zip(cost_array[:-1], cost_array[1:])), sum(prev < next for prev, next in zip(cost_array[:-1], cost_array[1:]))]
+            print(' '.join([str(num) for num in logs]))
     
-    plt.show()
+    plt.savefig(f'charts/alpha_{model_names[it_model].replace(" ", "_").lower()}.png', bbox_inches='tight')
     model.network.reset_state(with_devices=True)
