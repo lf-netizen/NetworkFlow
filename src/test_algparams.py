@@ -10,9 +10,15 @@ from network import Network
 # INSTRUKCJA
 # Parametr który się zmienia w kolejnych iteracjach wrzucamy w listę. Pozostałe (które są stałe) jako floaty. 
 
-t0 = [10e7,  10e5,  10e4,  10e2,  10e1, 10e-1]
-t1 = [10e-1, 10e-3, 10e-4, 10e-6, 10e-7, 10e-9]
-alpha = 0.95
+# bazowe parametry:
+# t0 = 10e5
+# t1 = 10e-3
+# alpha = 0.95
+# epoch_size = 50
+
+t0 = 10e5
+t1 = 10e-3
+alpha = [0.98, 0.95, 0.9, 0.8, 0.5, 0.1]
 epoch_size = 50
 
 nbhoods_active = [1, 1, 1, 1, 1, 1]
@@ -22,7 +28,7 @@ nrows = 2
 ncols = 3
 
 model_names = ('Dense model', 'Sparse model', 'Mean model')
-# NAZWA PARAMETRU /ALPHA/T0T1/EPOCHSIZE/ i current_params[?] DO ZMIANY: LINIA 60, 67, 70
+# NAZWA PARAMETRU /ALPHA/T0T1/EPOCHSIZE/ i current_params[?] DO ZMIANY: LINIA 66, 63, 76
 #####
 params = [t0, t1, alpha, epoch_size]
 # change params to list for convinience
