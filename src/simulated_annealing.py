@@ -17,6 +17,7 @@ class OptimizationModel:
         self.network = network
         self.adjmatrix = adjmatrix
         self.log_queue = queue.Queue()
+        self.solution = None
 
     def find_random_path(self, start_vertex: ID, end_vertex: ID) -> path:
         """
@@ -408,6 +409,7 @@ class OptimizationModel:
             t = t * alpha
 
         self.network.logs = previous_logs
+        self.solution = x
         self.log_queue.put(None)
         return x, it, cost
 
@@ -471,7 +473,11 @@ if __name__ == '__main__':
     network = Network(arch)
     network.load_schedule(schedule)
     Model = OptimizationModel(network=network, adjmatrix=adjmatrix)
+<<<<<<< HEAD
     solution, it, cost_array = Model.run_model(neighbourhoods_active={Model.change_solution4})
+=======
+    solution, it, cost_array = Model.run_model(10, 1, 0.2, 10, neighbourhoods_active={Model.change_solution3,Model.change_solution4,Model.change_solution6})
+>>>>>>> a4ef50de01740af5b5f21f722ff9cbcda779d054
     plt.figure()
     plt.plot(cost_array)
     plt.xlabel('Iterations')

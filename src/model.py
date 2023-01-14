@@ -2,6 +2,7 @@ from custom_types import ID
 from test import generate_random_schedule, generate_mean_case,generate_fully_connected_graph
 import numpy as np
 import pickle
+import json
 
 def dense_test_model():
     adjmatrix, arch = generate_fully_connected_graph(m=40,n=20,connection_probability=0.8)
@@ -181,30 +182,51 @@ def model3():
     return adjmatrix, arch, schedule
 
 
-def dense_model_predefined():
-    pickle_in = open("models/predefined_dense_model.pkl","rb")
-    model_data = pickle.load(pickle_in)
-    return model_data['adjmatrix'], model_data['arch'], model_data['schedule']
+def unpack_json(json_data: str) -> None:
+    # Deserialize the JSON data to a Python list
+    model_data = json.loads(json_data)
+    model_data['schedule'] = {int(k): v for k, v in model_data['schedule'].items()}
+    return np.array(model_data['adjmatrix']), model_data['arch'], model_data['schedule']
 
-def sparse_model_predefined():
-    pickle_in = open("models/predefined_sparse_model.pkl","rb")
-    model_data = pickle.load(pickle_in)
-    return model_data['adjmatrix'], model_data['arch'], model_data['schedule']
+def model_load(name):
+    # Load the JSON data from the file
+    with open(f"models/{name}.json", "r") as json_file:
+        json_data = json_file.read()
+    
+    return unpack_json(json_data)
 
-def mean_model_predefined():
-    pickle_in = open("models/predefined_mean_model.pkl","rb")
-    model_data = pickle.load(pickle_in)
-    return model_data['adjmatrix'], model_data['arch'], model_data['schedule']
-
-if __name__ == "__main__":
-    adjmatrix, arch, schedule = mean_test_model()
+def model_save(name, adjmatrix, arch, schedule):
     model_data = {
         'adjmatrix': adjmatrix,
         'arch': arch,
         'schedule': schedule
     }
-    pickle_out = open("models/predefined_mean_model.pkl","wb")
-    pickle.dump(model_data, pickle_out)
-    pickle_out.close()
+    json_model = json.dumps(model_data)
+    with open(f"models/{name}.json", "w") as json_file:
+        json_file.write(json_model)
 
+
+def dense_model_predefined():
+    return model_load('predefined_dense')
+
+def sparse_model_predefined():
+    return model_load('predefined_sparse')
+
+def mean_model_predefined():
+    return model_load('predefined_mean')
+    
+
+if __name__ == "__main__":
+    # adjmatrix, arch, schedule = mean_test_model()
+    # model_data = {
+    #     'adjmatrix': adjmatrix,
+    #     'arch': arch,
+    #     'schedule': schedule
+    # }
+
+    # model_save('predefined_dense', *dense_model_predefined())
+    # model_save('predefined_sparse', *sparse_model_predefined())
+    print(model_load('predefined_dense'))
+    
+    
         
