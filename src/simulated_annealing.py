@@ -473,11 +473,8 @@ if __name__ == '__main__':
     network = Network(arch)
     network.load_schedule(schedule)
     Model = OptimizationModel(network=network, adjmatrix=adjmatrix)
-<<<<<<< HEAD
     solution, it, cost_array = Model.run_model(neighbourhoods_active={Model.change_solution4})
-=======
     solution, it, cost_array = Model.run_model(10, 1, 0.2, 10, neighbourhoods_active={Model.change_solution3,Model.change_solution4,Model.change_solution6})
->>>>>>> a4ef50de01740af5b5f21f722ff9cbcda779d054
     plt.figure()
     plt.plot(cost_array)
     plt.xlabel('Iterations')
