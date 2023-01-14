@@ -19,8 +19,6 @@ nbhoods_active = [1, 1, 1, 1, 1, 1]
 
 with open('logs/test_packages_count.txt', 'w') as file:
     for it_model, model_loader in enumerate((dense_model_predefined, sparse_model_predefined, mean_model_predefined)):
-        print(f'================\nMODEL {it_model}: {current_time} CET')
-        
         file.write(f'MODEL {it_model}\n')
 
         adjmatrix, arch, _ = model_loader()

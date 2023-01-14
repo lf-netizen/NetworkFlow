@@ -16,6 +16,7 @@ import time
 import threading
 import model
 import my_model
+import copy
 
 customtkinter.set_appearance_mode("Light")          # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -294,15 +295,22 @@ class GraphFrame(customtkinter.CTkFrame):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
         
-        nx.draw(self.G, ax=ax, with_labels=True, font_weight='bold')
+        # Model = app.main_frame.chart_frame.chart.Model
+        # endpoints_ids = [e.id for e in Model.network.e_it]
+        # pos_endpoints = nx.circular_layout(self.G.subgraph(endpoints_ids), scale=2)
+        # pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
+
+        nx.draw(self.G, 
+                # pos=pos, 
+                ax=ax, with_labels=True, font_weight='bold')
 
         self.fig.canvas.draw()
     
     def draw_graph_with_colors(self):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
-        # pos = nx.spring_layout(self.G)
 
+        Model = app.main_frame.chart_frame.chart.Model
         weights = app.main_frame.chart_frame.chart.Model.network.logs['edges_weight']
         for u, v, d in self.G.edges(data=True):
             try:
@@ -315,10 +323,52 @@ class GraphFrame(customtkinter.CTkFrame):
                 w2 = 0
             d['weight'] = w1 + w2
 
-        pos = nx.spring_layout(self.G, scale=1)
-        edges, weights = zip(*nx.get_edge_attributes(self.G,'weight').items())
-        nx.draw(self.G, pos, node_color='b', edgelist=edges, edge_color=weights, width=5, edge_cmap=plt.cm.RdYlBu_r, ax=ax, with_labels=True)
 
+        endpoints_ids = [e.id for e in Model.network.e_it]
+
+        pos_endpoints = nx.circular_layout(self.G.subgraph(endpoints_ids), scale=2)
+        # x = [arr[0] for arr in pos_endpoints.values()]
+        # y = [arr[1] for arr in pos_endpoints.values()]
+        # xlim_min = min(x)
+        # ylim_min = min(y)
+        # xlim_max = max(x)
+        # ylim_max = max(y)
+        # for it in range(100):
+        pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
+            # x = [arr[0] for arr in pos.values()]
+            # y = [arr[1] for arr in pos.values()]
+            # if xlim_min <= min(x) and ylim_min <= min(y) and xlim_max >= max(x) and ylim_max >= max(y):
+            #     print(it)
+            #     break
+        
+        edges, weights = zip(*nx.get_edge_attributes(self.G,'weight').items())
+        nx.draw(self.G, pos=pos, node_color='b', edgelist=edges, edge_color=weights, width=5, edge_cmap=plt.cm.RdYlBu_r, ax=ax, with_labels=True)
+
+        self.fig.canvas.draw()        
+
+    def draw_graph_solution(self, target_id=8):
+    # def draw_graph_with_colors(self, target_id=8):
+        self.fig.clear()
+        ax = self.fig.add_subplot(111)
+
+        Model = app.main_frame.chart_frame.chart.Model
+        solution = Model.solution
+        
+        if solution is None:
+            print('trying to draw solution graph with no solution')
+
+        endpoints_gates = [(e.id, e.gate_id) for e in Model.network.e_it if e.id != target_id]
+        routers_directions = [(src_id, dst_id) for src_id, routing_table in solution.items() for key, dst_id in routing_table.items() if key == target_id]
+
+        G = self.G.to_directed()
+        G.remove_edges_from(list(G.edges))
+        G.add_edges_from(endpoints_gates + routers_directions)
+
+        endpoints_ids = [e.id for e in Model.network.e_it]
+        pos_endpoints = nx.circular_layout(self.G.subgraph(endpoints_ids), scale=2)
+        pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
+
+        nx.draw(G, pos=pos, ax=ax, with_labels=True, font_weight='bold')
         self.fig.canvas.draw()        
 
 
