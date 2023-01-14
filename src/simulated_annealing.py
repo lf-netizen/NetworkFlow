@@ -380,6 +380,9 @@ class OptimizationModel:
         def num_epochs(it):
             return int(a * it ** 2 + 5)
 
+        min_loss = np.inf
+        best_solution = x
+
         while t1 < t:
             epoch_size = num_epochs(it)
             for _ in range(epoch_size):
@@ -390,6 +393,9 @@ class OptimizationModel:
                 if new_loss < previous_loss:
                     x = x1
                     previous_loss = new_loss
+                    if new_loss < min_loss:
+                        min_loss = new_loss
+                        best_solution = x
                 else:
                     probability = np.exp(-(new_loss - previous_loss) / t)
                     if probability > np.random.random():
@@ -409,72 +415,66 @@ class OptimizationModel:
             t = t * alpha
 
         self.network.logs = previous_logs
-        self.solution = x
+        self.solution = best_solution
         self.log_queue.put(None)
-        return x, it, cost
+        return best_solution, it, cost
 
 
 if __name__ == '__main__':
-    # 7 routers and 4 pcs
-    adjmatrix = np.array([[0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0],
-                          [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0],
-                          [1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0],
-                          [1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1],
-                          [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
-                          [0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
-                          [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0],
-                          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]], dtype=object)
+    adjmatrix = np.array([[0, 1, 1, 1, 1, 0, 0, 0],
+                          [1, 0, 1, 1, 0, 1, 0, 0],
+                          [1, 1, 0, 1, 0, 0, 1, 0],
+                          [1, 1, 1, 0, 0, 0, 0, 1],
+                          [1, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 1, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 1, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 1, 0, 0, 0, 0]],dtype=object)
     arch = {
         'routers': [
-            {'id': 0, 'transmission_capacity': 5},
-            {'id': 1, 'transmission_capacity': 10},
-            {'id': 2, 'transmission_capacity': 10},
-            {'id': 3, 'transmission_capacity': 5},
-            {'id': 4, 'transmission_capacity': 10},
-            {'id': 5, 'transmission_capacity': 10},
-            {'id': 6, 'transmission_capacity': 5}
+            {'id': 0, 'transmission_capacity': 3},
+            {'id': 1, 'transmission_capacity': 3},
+            {'id': 2, 'transmission_capacity': 3},
+            {'id': 3, 'transmission_capacity': 3},
         ],
         'endpoints': [
-            {'id': 7, 'gate_id': 0},
-            {'id': 8, 'gate_id': 1},
-            {'id': 9, 'gate_id': 2},
-            {'id': 10, 'gate_id': 3}
+            {'id': 4, 'gate_id': 0},
+            {'id': 5, 'gate_id': 1},
+            {'id': 6, 'gate_id': 2},
+            {'id': 7, 'gate_id': 3}
+        ]
+    }
+    schedule = {
+        4: [
+            {'destination_id': 5, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1},
+            {'destination_id': 7, 'request_time': 1, 'priority': 1}
+        ],
+        5: [
+            {'destination_id': 4, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1},
+            {'destination_id': 7, 'request_time': 1, 'priority': 1}
+        ],
+        6: [
+            {'destination_id': 4,'request_time': 1, 'priority': 1},
+            {'destination_id': 5,'request_time': 1, 'priority': 1},
+            {'destination_id': 7,'request_time': 1, 'priority': 1}
+        ],
+        7: [
+            {'destination_id': 4, 'request_time': 1, 'priority': 1},
+            {'destination_id': 5, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1}
         ]
     }
 
-    schedule = {
-        7: [
-            {'destination_id': 8, 'request_time': 2, 'priority': 2},
-            {'destination_id': [9, 10], 'request_time': 4, 'priority': 2},
-            {'destination_id': 9, 'request_time': 3, 'priority': 1}
-        ],
-        8: [
-            {'destination_id': 7, 'request_time': 1, 'priority': 2},
-            {'destination_id': 9, 'request_time': 2, 'priority': 2},
-            {'destination_id': 10, 'request_time': 3, 'priority': 1}
-        ],
-        9: [
-            {'destination_id': 7, 'request_time': 5, 'priority': 2},
-            {'destination_id': 8, 'request_time': 3, 'priority': 1}
-        ],
-        10: [
-            {'destination_id': 7, 'request_time': 4, 'priority': 2},
-            {'destination_id': 7, 'request_time': 4, 'priority': 2},
-            {'destination_id': 7, 'request_time': 4, 'priority': 2},
-            {'destination_id': 8, 'request_time': 6, 'priority': 2},
-            {'destination_id': 9, 'request_time': 3, 'priority': 1}
-        ]
-    }
 
     # example pipeline
     network = Network(arch)
     network.load_schedule(schedule)
     Model = OptimizationModel(network=network, adjmatrix=adjmatrix)
     solution, it, cost_array = Model.run_model(neighbourhoods_active={Model.change_solution4})
-    solution, it, cost_array = Model.run_model(10, 1, 0.2, 10, neighbourhoods_active={Model.change_solution3,Model.change_solution4,Model.change_solution6})
+    solution, it, cost_array = Model.run_model(10e5, 10e-3, 0.95, 10, neighbourhoods_active={Model.change_solution, Model.change_solution2,Model.change_solution3,Model.change_solution4,Model.change_solution6})
+    print(cost_array[-1])
+    print(solution)
     plt.figure()
     plt.plot(cost_array)
     plt.xlabel('Iterations')
