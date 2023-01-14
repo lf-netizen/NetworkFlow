@@ -355,6 +355,9 @@ class OptimizationModel:
         def num_epochs(it):
             return int(a*it**2 + 5)
 
+        min_loss = np.inf
+        best_solution = x
+
         while t1 < t:
             epoch_size = num_epochs(it)
             for _ in range(epoch_size):
@@ -365,6 +368,9 @@ class OptimizationModel:
                 if new_loss < previous_loss:
                     x = x1
                     previous_loss = new_loss
+                    if new_loss < min_loss:
+                        min_loss = new_loss
+                        best_solution = x
                 else:
                     probability = np.exp(-(new_loss - previous_loss)/t)
                     if probability > np.random.random():
@@ -384,9 +390,11 @@ class OptimizationModel:
             t = t * alpha
             
         self.network.logs = previous_logs
-        self.solution = x
+        self.solution = best_solution
         self.log_queue.put(None)
-        return x, it, cost
+        print(min_loss)
+        print(f'solution: {best_solution}')
+        return best_solution, it, cost
 
 
 if __name__ == '__main__':
@@ -443,12 +451,57 @@ if __name__ == '__main__':
             {'destination_id': 9, 'request_time': 3, 'priority': 1}
         ]
     }
+    adjmatrix = np.array([[0, 1, 1, 1, 1, 0, 0, 0],
+                          [1, 0, 1, 1, 0, 1, 0, 0],
+                          [1, 1, 0, 1, 0, 0, 1, 0],
+                          [1, 1, 1, 0, 0, 0, 0, 1],
+                          [1, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 1, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 1, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 1, 0, 0, 0, 0]],dtype=object)
+
+    arch = {
+        'routers': [
+            {'id': 0, 'transmission_capacity': 3},
+            {'id': 1, 'transmission_capacity': 3},
+            {'id': 2, 'transmission_capacity': 3},
+            {'id': 3, 'transmission_capacity': 3},
+        ],
+        'endpoints': [
+            {'id': 4, 'gate_id': 0},
+            {'id': 5, 'gate_id': 1},
+            {'id': 6, 'gate_id': 2},
+            {'id': 7, 'gate_id': 3}
+        ]
+    }
+    schedule = {
+        4: [
+            {'destination_id': 5, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1},
+            {'destination_id': 7, 'request_time': 1, 'priority': 1}
+        ],
+        5: [
+            {'destination_id': 4, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1},
+            {'destination_id': 7, 'request_time': 1, 'priority': 1}
+        ],
+        6: [
+            {'destination_id': 4,'request_time': 1, 'priority': 1},
+            {'destination_id': 5,'request_time': 1, 'priority': 1},
+            {'destination_id': 7,'request_time': 1, 'priority': 1}
+        ],
+        7: [
+            {'destination_id': 4, 'request_time': 1, 'priority': 1},
+            {'destination_id': 5, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1}
+        ]
+    }
 
     # example pipeline
     network = Network(arch)
     network.load_schedule(schedule)
     Model = OptimizationModel(network=network, adjmatrix=adjmatrix)
-    solution, it, cost_array = Model.run_model(10, 1, 0.2, 10, neighbourhoods_active={Model.change_solution3,Model.change_solution4,Model.change_solution6})
+    solution, it, cost_array = Model.run_model(10, 1, 0.95, 10, neighbourhoods_active={Model.change_solution3,Model.change_solution4,Model.change_solution6})
     plt.figure()
     plt.plot(cost_array)
     plt.xlabel('Iterations')
