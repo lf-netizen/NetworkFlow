@@ -11,9 +11,7 @@ iterations = 100
 t0 = 10e5
 t1 = 10e-3
 alpha = 0.95
-alpha = 0.1
 epoch_size = 50
-epoch_size = 10
 nbhoods_active = [1, 1, 1, 1, 1, 1]
 ###
 
