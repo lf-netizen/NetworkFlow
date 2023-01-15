@@ -1,0 +1,46 @@
+{
+    "adjmatrix":   [[0, 1, 1, 1, 1, 0, 0, 0], 
+                    [1, 0, 1, 1, 0, 1, 0, 0], 
+                    [1, 1, 0, 1, 0, 0, 1, 0], 
+                    [1, 1, 1, 0, 0, 0, 0, 1], 
+                    [1, 0, 0, 0, 0, 0, 0, 0], 
+                    [0, 1, 0, 0, 0, 0, 0, 0], 
+                    [0, 0, 1, 0, 0, 0, 0, 0], 
+                    [0, 0, 0, 1, 0, 0, 0, 0]], 
+    "arch": {
+        "routers": [
+            {"id": 0, "transmission_capacity": 3}, 
+            {"id": 1, "transmission_capacity": 3}, 
+            {"id": 2, "transmission_capacity": 3}, 
+            {"id": 3, "transmission_capacity": 3}
+        ], 
+        "endpoints": [
+            {"id": 4, "gate_id": 0}, 
+            {"id": 5, "gate_id": 1}, 
+            {"id": 6, "gate_id": 2}, 
+            {"id": 7, "gate_id": 3}
+        ]
+    }, 
+    "schedule": {
+        "4": [
+            {"destination_id": 5, "request_time": 1, "priority": 1}, 
+            {"destination_id": 6, "request_time": 1, "priority": 1}, 
+            {"destination_id": 7, "request_time": 1, "priority": 1}
+        ], 
+        "5": [
+            {"destination_id": 4, "request_time": 1, "priority": 1}, 
+            {"destination_id": 6, "request_time": 1, "priority": 1}, 
+            {"destination_id": 7, "request_time": 1, "priority": 1}
+        ], 
+        "6": [
+            {"destination_id": 4, "request_time": 1, "priority": 1}, 
+            {"destination_id": 5, "request_time": 1, "priority": 1}, 
+            {"destination_id": 7, "request_time": 1, "priority": 1}
+        ], 
+        "7": [
+            {"destination_id": 4, "request_time": 1, "priority": 1}, 
+            {"destination_id": 5, "request_time": 1, "priority": 1}, 
+            {"destination_id": 6, "request_time": 1, "priority": 1}
+        ]
+    }
+}
