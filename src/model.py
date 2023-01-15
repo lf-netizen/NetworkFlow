@@ -77,6 +77,7 @@ def model1():
     # return OptimizationModel(network=network, adjmatrix=adjmatrix)
 
 def model2():
+    # simple model
     adjmatrix = np.array([[0, 1, 1, 1, 1, 0, 0, 0],
                           [1, 0, 1, 1, 0, 1, 0, 0],
                           [1, 1, 0, 1, 0, 0, 1, 0],
@@ -87,10 +88,10 @@ def model2():
                           [0, 0, 0, 1, 0, 0, 0, 0]],dtype=object)
     arch = {
         'routers': [
-            {'id': 0, 'transmission_capacity':  5},
-            {'id': 1, 'transmission_capacity': 10},
-            {'id': 2, 'transmission_capacity': 10},
-            {'id': 3, 'transmission_capacity': 5},
+            {'id': 0, 'transmission_capacity': 3},
+            {'id': 1, 'transmission_capacity': 3},
+            {'id': 2, 'transmission_capacity': 3},
+            {'id': 3, 'transmission_capacity': 3},
         ],
         'endpoints': [
             {'id': 4, 'gate_id': 0},
@@ -101,24 +102,24 @@ def model2():
     }
     schedule = {
         4: [
-            {'destination_id': 5,      'request_time': 2, 'priority': 2},
-            {'destination_id': 6, 'request_time': 4, 'priority': 2},
-            {'destination_id': 7,      'request_time': 3, 'priority': 1}
+            {'destination_id': 5, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1},
+            {'destination_id': 7, 'request_time': 1, 'priority': 1}
         ],
         5: [
-            {'destination_id': 4,      'request_time': 1, 'priority': 2},
-            {'destination_id': 6, 'request_time': 2, 'priority': 2},
-            {'destination_id': 7,      'request_time': 3, 'priority': 1}
+            {'destination_id': 4, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1},
+            {'destination_id': 7, 'request_time': 1, 'priority': 1}
         ],
         6: [
-            {'destination_id': 4, 'request_time': 5, 'priority': 2},
-            {'destination_id': 5, 'request_time': 3, 'priority': 1},
-            {'destination_id': 7, 'request_time': 3, 'priority': 1}
+            {'destination_id': 4,'request_time': 1, 'priority': 1},
+            {'destination_id': 5,'request_time': 1, 'priority': 1},
+            {'destination_id': 7,'request_time': 1, 'priority': 1}
         ],
         7: [
-            {'destination_id': 4, 'request_time': 4, 'priority': 2},
-            {'destination_id': 5, 'request_time': 6, 'priority': 2},
-            {'destination_id': 6, 'request_time': 3, 'priority': 1}
+            {'destination_id': 4, 'request_time': 1, 'priority': 1},
+            {'destination_id': 5, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1}
         ]
     }
 
@@ -197,7 +198,7 @@ def model_load(name):
 
 def model_save(name, adjmatrix, arch, schedule):
     model_data = {
-        'adjmatrix': adjmatrix,
+        'adjmatrix': adjmatrix if isinstance(adjmatrix, list) else adjmatrix.tolist(),
         'arch': arch,
         'schedule': schedule
     }
@@ -217,6 +218,7 @@ def mean_model_predefined():
     
 
 if __name__ == "__main__":
+    pass
     # adjmatrix, arch, schedule = mean_test_model()
     # model_data = {
     #     'adjmatrix': adjmatrix,
@@ -226,7 +228,10 @@ if __name__ == "__main__":
 
     # model_save('predefined_dense', *dense_model_predefined())
     # model_save('predefined_sparse', *sparse_model_predefined())
-    print(model_load('predefined_dense'))
+    # print(model_load('predefined_dense'))
     
+    # adjmatrix, arch, schedule = model2()
+    # model_save('simple', adjmatrix, arch, schedule)
+
     
         
