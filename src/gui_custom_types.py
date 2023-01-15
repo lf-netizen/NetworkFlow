@@ -19,12 +19,11 @@ import my_model
 import copy
 
 
-
 class SliderBlock(customtkinter.CTkFrame):
     def __init__(self, *args, value=1_000, name='t0', slider_start=0, slider_end=8, min_value=1, max_value=1_000_000,
                  scale_fun=lambda x: x, inverse_fun=lambda x: x, default_value=1_000, steps=100_000, round_factor=2, **kwargs):
         super().__init__(*args, **kwargs)
-        self.value = value
+        self.value = default_value
         self.name = name
         self.slider_start = slider_start
         self.slider_end = slider_end
