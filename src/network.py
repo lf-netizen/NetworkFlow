@@ -121,36 +121,53 @@ class Network:
 if __name__ == '__main__':
     arch = {
         'routers': [
-            {'id': 2, 'transmission_capacity': 1}, 
-            {'id': 3, 'transmission_capacity': 2}
+            {'id': 0, 'transmission_capacity': 3},
+            {'id': 1, 'transmission_capacity': 3},
+            {'id': 2, 'transmission_capacity': 3},
+            {'id': 3, 'transmission_capacity': 3},
         ],
         'endpoints': [
-            {'id': 1, 'gate_id': 2},
-            {'id': 4, 'gate_id': 3},
-            {'id': 5, 'gate_id': 3}
+            {'id': 4, 'gate_id': 0},
+            {'id': 5, 'gate_id': 1},
+            {'id': 6, 'gate_id': 2},
+            {'id': 7, 'gate_id': 3}
         ]
     }
-    routing_tables = {
-        2: {1: 1, 4: 3, 5: 3},
-        3: {1: 2, 4: 4, 5: 5}
-    }
-
     schedule = {
-        1: [
-            {'destination_id': 4,      'request_time': 1, 'priority': 2},
-            {'destination_id': [4, 5], 'request_time': 1, 'priority': 2},
-            {'destination_id': 5,      'request_time': 3, 'priority': 1}
-        ],
         4: [
-            {'destination_id': 1,      'request_time': 1, 'priority': 1}
+            {'destination_id': 5, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1},
+            {'destination_id': 7, 'request_time': 1, 'priority': 1}
+        ],
+        5: [
+            {'destination_id': 4, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1},
+            {'destination_id': 7, 'request_time': 1, 'priority': 1}
+        ],
+        6: [
+            {'destination_id': 4, 'request_time': 1, 'priority': 1},
+            {'destination_id': 5, 'request_time': 1, 'priority': 1},
+            {'destination_id': 7, 'request_time': 1, 'priority': 1}
+        ],
+        7: [
+            {'destination_id': 4, 'request_time': 1, 'priority': 1},
+            {'destination_id': 5, 'request_time': 1, 'priority': 1},
+            {'destination_id': 6, 'request_time': 1, 'priority': 1}
         ]
     }
+    # routing_tables = {
+    #     0: {4: 4, 5: 1, 6: 2, 7: 2},
+    #     1: {5: 5, 6: 2, 7: 2, 4: 0},
+    #     2: {6: 6, 7: 3, 4: 1, 5: 1},
+    #     3: {6: 0, 7: 7, 4: 1, 5: 0}
+    #     }
 
+    routing_tables = {0: {4: 4, 5: 3, 6: 2, 7: 2}, 1: {5: 5, 6: 0, 7: 3, 4: 0}, 2: {6: 6, 7: 3, 4: 0, 5: 1}, 3: {7: 7, 4: 0, 5: 2, 6: 1}}
     # example pipeline
     network = Network(arch)
     network.load_schedule(schedule)
-    for _ in range(2):
-        network.load_routing_tables(routing_tables) # assuming routing tables are modified with every iteration
+    for _ in range(50):
+        network.load_routing_tables(routing_tables)  # assuming routing tables are modified with every iteration
         loss = network.simulate()
         network.reset_state(with_schedule=False)
         print(loss)

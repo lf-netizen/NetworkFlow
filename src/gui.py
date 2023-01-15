@@ -17,8 +17,9 @@ import threading
 import model
 import my_model
 import copy
+from gui_custom_types import SliderBlock
 
-customtkinter.set_appearance_mode("Light")          # Modes: "System" (standard), "Dark", "Light"
+customtkinter.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 # load required images
@@ -30,11 +31,9 @@ graph_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "neu
 chart_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "line-chart.png")), size=(30, 30))
 heat_map_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "color_map.png")), size=(30, 250))
 
-
 simulation_ended = False
 global_radio_var = 0
 graph_select = 0
-
 
 adjmatrix, arch, schedule = model.model1()
 global_network = Network(arch)
@@ -51,48 +50,53 @@ num_improvements = None
 class HomeFrame(customtkinter.CTkFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        self._corner_radius=0
+
+        self._corner_radius = 0
         # self._fg_color="#0000FF"
 
         # create 2x2 grid system
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
 
-
         self.neighbourhood_frame = customtkinter.CTkFrame(self)
+        self.neighbourhood_frame.grid(row=1, column=0, padx=20, pady=(0, 20))
         self.neighbourhood_frame.grid(row=1, column=0, padx=20, pady=(0, 20))
 
         self.neighbourhood_frame.grid_rowconfigure(8, weight=1)
         self.neighbourhood_frame.grid_columnconfigure(1, weight=1)
 
         # define simulation parameters ##############
-        self.t0 = 10e5      # =1_000_000
-        self.t1 = 10e-3     # =0.01
+        self.t0 = 10e5  # =1_000_000
+        self.t1 = 10e-3  # =0.01
         self.alpha = 0.95
         self.epoch_size = 50
         self.neighbourhoods = [0, 0, 0, 0, 0, 0]
         ###
-        
+
         self.switch_var1 = customtkinter.StringVar(value="on")
         self.switch_var2 = customtkinter.StringVar(value="on")
         self.switch_var3 = customtkinter.StringVar(value="on")
         self.switch_var4 = customtkinter.StringVar(value="on")
         self.switch_var5 = customtkinter.StringVar(value="on")
         self.switch_var6 = customtkinter.StringVar(value="on")
-        self.neighbourhood_switch_1 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 1", command=self.switch1_event, variable=self.switch_var1)
+        self.neighbourhood_switch_1 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 1",
+                                                              command=self.switch1_event, variable=self.switch_var1)
         self.neighbourhood_switch_1.grid(row=0, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_2 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 2", command=self.switch2_event, variable=self.switch_var2)
+        self.neighbourhood_switch_2 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 2",
+                                                              command=self.switch2_event, variable=self.switch_var2)
         self.neighbourhood_switch_2.grid(row=1, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_3 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 3", command=self.switch3_event, variable=self.switch_var3)
+        self.neighbourhood_switch_3 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 3",
+                                                              command=self.switch3_event, variable=self.switch_var3)
         self.neighbourhood_switch_3.grid(row=2, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_4 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 4", command=self.switch4_event, variable=self.switch_var4)
+        self.neighbourhood_switch_4 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 4",
+                                                              command=self.switch4_event, variable=self.switch_var4)
         self.neighbourhood_switch_4.grid(row=3, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_5 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 5", command=self.switch5_event, variable=self.switch_var5)
+        self.neighbourhood_switch_5 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 5",
+                                                              command=self.switch5_event, variable=self.switch_var5)
         self.neighbourhood_switch_5.grid(row=4, column=0, padx=20, pady=10)
-        self.neighbourhood_switch_6 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 6", command=self.switch6_event, variable=self.switch_var6)
+        self.neighbourhood_switch_6 = customtkinter.CTkSwitch(self.neighbourhood_frame, text="neighbourhood 6",
+                                                              command=self.switch6_event, variable=self.switch_var6)
         self.neighbourhood_switch_6.grid(row=5, column=0, padx=20, pady=10)
-
 
         self.start_graph_frame = customtkinter.CTkFrame(self)
         self.start_graph_frame.grid(row=0, column=0, padx=20, pady=20)
@@ -101,68 +105,85 @@ class HomeFrame(customtkinter.CTkFrame):
         self.start_graph_frame.grid_columnconfigure(0, weight=1)
 
         self.radio_var = tkinter.IntVar(value=0)
-        self.start_graph_radio_1 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=0, text="graph 1")
+        self.start_graph_radio_1 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event,
+                                                                variable=self.radio_var, value=0, text="graph 1")
         self.start_graph_radio_1.grid(row=0, column=0, padx=20, pady=10)
-        self.start_graph_radio_2 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=1, text="graph 2")
+        self.start_graph_radio_2 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event,
+                                                                variable=self.radio_var, value=1, text="graph 2")
         self.start_graph_radio_2.grid(row=1, column=0, padx=20, pady=10)
-        self.start_graph_radio_3 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=2, text="graph 3")
+        self.start_graph_radio_3 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event,
+                                                                variable=self.radio_var, value=2, text="graph 3")
         self.start_graph_radio_3.grid(row=2, column=0, padx=20, pady=10)
-        self.start_graph_radio_4 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event, variable=self.radio_var, value=3, text="my_model")
+        self.start_graph_radio_4 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event,
+                                                                variable=self.radio_var, value=3, text="my_model")
         self.start_graph_radio_4.grid(row=3, column=0, padx=20, pady=10)
-        
 
-        self.description_frame = customtkinter.CTkFrame(self)
-        self.description_frame.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
-
-        self.description_frame.grid_rowconfigure(3, weight=1)
-        self.description_frame.grid_columnconfigure(0, weight=1)
-
-        self.description_textbox1 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
-        self.description_textbox1.grid(row=0, column=0, padx=(20, 20), pady=(25, 14), sticky="nsew")
-        self.description_textbox1.insert("0.0", f't0 value: 1000000 \n')
-        self.description_textbox1.configure(state="disabled")
-        self.description_textbox2 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
-        self.description_textbox2.grid(row=1, column=0, padx=(20, 20), pady=(14, 14), sticky="nsew")
-        self.description_textbox2.insert("0.0", f't1 value: 0.01 \n')
-        self.description_textbox2.configure(state="disabled")
-        self.description_textbox3 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
-        self.description_textbox3.grid(row=2, column=0, padx=(20, 20), pady=(14, 14), sticky="nsew")
-        self.description_textbox3.insert("0.0", f'alpha value: 0.95 \n')
-        self.description_textbox3.configure(state="disabled")
-        self.description_textbox4 = customtkinter.CTkTextbox(self.description_frame, width=100, height=20, activate_scrollbars=False)
-        self.description_textbox4.grid(row=3, column=0, padx=(20, 20), pady=(14, 30), sticky="nsew")
-        self.description_textbox4.insert("0.0", f'epoch_size value: 50 \n')
-        self.description_textbox4.configure(state="disabled")
 
         self.parameters_frame = customtkinter.CTkFrame(self)
-        self.parameters_frame.grid(row=0, column=2, padx=20, pady=20)
-
+        self.parameters_frame.grid(row=0, column=1, columnspan=2, padx=20, pady=20)
         self.parameters_frame.grid_rowconfigure(4, weight=1)
-        self.parameters_frame.grid_columnconfigure(0, weight=1)
+        self.parameters_frame.grid_columnconfigure(1, weight=1)
 
-        self.parameters_slider_t0 = customtkinter.CTkSlider(self.parameters_frame, from_=0, to=8, command=self.slider_t0_event, number_of_steps=100_000)
-        self.parameters_slider_t0.grid(row=0, column=0, padx=20, pady=20)
-        self.parameters_slider_t0.set(np.log10(self.t0))
-        #self.parameters_slider_1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
-        self.parameters_slider_t1 = customtkinter.CTkSlider(self.parameters_frame, from_=-8, to=0, command=self.slider_t1_event, number_of_steps=100_000)
-        self.parameters_slider_t1.grid(row=1, column=0, padx=20, pady=20)
-        self.parameters_slider_t1.set(np.log10(self.t1))
-        self.parameters_slider_alpha = customtkinter.CTkSlider(self.parameters_frame, from_=0.001, to=0.99, command=self.slider_alpha_event, number_of_steps=1000)
-        self.parameters_slider_alpha.grid(row=2, column=0, padx=20, pady=20)
-        self.parameters_slider_alpha.set(self.alpha)
-        self.parameters_slider_epoch_size = customtkinter.CTkSlider(self.parameters_frame, from_=10, to=200, command=self.slider_epoch_size_event, number_of_steps=190)
-        self.parameters_slider_epoch_size.grid(row=3, column=0, padx=20, pady=20)
-        self.parameters_slider_epoch_size.set(self.epoch_size)
-        #self.parameters_slider_2.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
+
+        self.parameters_slider_t0 = SliderBlock(self.parameters_frame, name='t0', slider_start=0, slider_end=8, steps=100_000, default_value=1_000_000, scale_fun=lambda x: np.log10(x), inverse_fun=lambda x: np.power(10, x), round_factor=0)
+        self.parameters_slider_t0.grid(row=0, column=0, columnspan=2, padx=10, pady=(10, 0), sticky='ew')
+        # self.parameters_slider_t0.set(self.t0)
+        # self.parameters_slider_1.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
+        self.parameters_slider_t1 = SliderBlock(self.parameters_frame, name='t1', slider_start=-8, slider_end=0, steps=100_000, default_value=0.01, scale_fun=lambda x: np.log10(x), inverse_fun=lambda x: np.power(10, x), round_factor=8)
+        self.parameters_slider_t1.grid(row=1, column=0, columnspan=2, padx=10, pady=0, sticky='ew')
+        # self.parameters_slider_t1.set(np.log10(self.t1))
+
+        self.parameters_slider_alpha = SliderBlock(self.parameters_frame, name='alpha', slider_start=0.001, slider_end=0.99, steps=1_000, default_value=0.95)
+        self.parameters_slider_alpha.grid(row=2, column=0, columnspan=2, padx=10, pady=0, sticky='ew')
+        # self.parameters_slider_alpha.set(self.alpha)
+
+        self.parameters_slider_epoch_size = SliderBlock(self.parameters_frame, name='epoch_size', slider_start=10, slider_end=200, steps=190, default_value=50, round_factor=0)
+        self.parameters_slider_epoch_size.grid(row=3, column=0, columnspan=2, padx=10, pady=0, sticky='ew')
+        # self.parameters_slider_epoch_size.set(self.epoch_size)
+
+        self.parameters_button_reset = customtkinter.CTkButton(master=self.parameters_frame,
+                                                             width=120,
+                                                             height=32,
+                                                             border_width=0,
+                                                             corner_radius=8,
+                                                             text="RESET",
+                                                             command=self.parameters_button_reset_event)
+        self.parameters_button_reset.grid(row=4, column=0, padx=(40, 0), pady=(10, 10))
+
+        self.parameters_button_set = customtkinter.CTkButton(master=self.parameters_frame,
+                                                             width=120,
+                                                             height=32,
+                                                             border_width=0,
+                                                             corner_radius=8,
+                                                             text="SAVE",
+                                                             command=self.parameters_button_set_event)
+        self.parameters_button_set.grid(row=4, column=1, padx=(0, 40), pady=(10, 10), sticky='e')
 
         self.textbox = customtkinter.CTkTextbox(self, width=200)
         self.textbox.grid(row=1, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew")
 
-        self.upload_model_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text=" Upload new model",
-                                                   fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-                                                   anchor="w", command=self.upload_model_button_event, 
-                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.upload_model_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10,
+                                                           text=" Upload new model",
+                                                           fg_color="transparent", text_color=("gray10", "gray90"),
+                                                           hover_color=("gray70", "gray30"),
+                                                           anchor="w", command=self.upload_model_button_event,
+                                                           font=customtkinter.CTkFont(size=15, weight="bold"))
         self.upload_model_button.grid(row=1, column=2, sticky="ew")
+
+    def parameters_button_set_event(self):
+        # temp = float(self.parameters_slider_t0.get_textbox_content())
+
+
+        self.parameters_slider_t0.set(float(self.parameters_slider_t0.get_textbox_content()))
+        self.parameters_slider_t1.set(float(self.parameters_slider_t1.get_textbox_content()))
+        self.parameters_slider_alpha.set(float(self.parameters_slider_alpha.get_textbox_content()))
+        self.parameters_slider_epoch_size.set(float(self.parameters_slider_epoch_size.get_textbox_content()))
+
+    def parameters_button_reset_event(self):
+        self.parameters_slider_t0.reset()
+        self.parameters_slider_t1.reset()
+        self.parameters_slider_alpha.reset()
+        self.parameters_slider_epoch_size.reset()
 
     def upload_model_button_event(self):
         text = self.textbox.get("0.0", "end")
@@ -170,21 +191,23 @@ class HomeFrame(customtkinter.CTkFrame):
         with open('src/my_model.py', 'w') as f:
             f.write(f'from custom_types import ID\nimport numpy as np\n{text}')
 
-    
     def switch1_event(self):
-        print(f'sw1 {self.switch_var1.get()}')
         self.neighbourhoods[0] = self.switch_var1.get()
+
     def switch2_event(self):
         self.neighbourhoods[1] = self.switch_var1.get()
+
     def switch3_event(self):
         self.neighbourhoods[2] = self.switch_var1.get()
+
     def switch4_event(self):
         self.neighbourhoods[3] = self.switch_var1.get()
+
     def switch5_event(self):
         self.neighbourhoods[4] = self.switch_var1.get()
+
     def switch6_event(self):
         self.neighbourhoods[5] = self.switch_var1.get()
-
 
     def radio_event(self):
         global prev_radio_var
@@ -198,12 +221,10 @@ class HomeFrame(customtkinter.CTkFrame):
         if prev_radio_var != global_radio_var:
             prev_radio_var = global_radio_var
             graph_select = 1
-            print('test')
             global_network.reset_state(True, True)
             if global_radio_var == 0:
                 adjmatrix, arch, schedule = model.model1()
             elif global_radio_var == 1:
-                print('dwa')
                 adjmatrix, arch, schedule = model.model2()
             elif global_radio_var == 2:
                 adjmatrix, arch, schedule = model.model3()
@@ -216,48 +237,34 @@ class HomeFrame(customtkinter.CTkFrame):
             graph_select = 0
         print("radiobutton toggled, current value:", self.radio_var.get())
 
-    def slider_t0_event(self, val):
-        val = np.power(10, val)
-        self.description_textbox1.configure(state="normal")
-        self.description_textbox1.insert('0.0', f't0 value: {val:.1f} \n')
-        self.description_textbox1.configure(state="disable")
-        app.main_frame.home_frame.t0 = val
-    def slider_t1_event(self, val):
-        val = np.power(10, val)
-        self.description_textbox2.configure(state="normal")
-        self.description_textbox2.insert('0.0', f't1 value: {val:.10f} \n')
-        self.description_textbox2.configure(state="disable")
-        app.main_frame.home_frame.t1 = val
-    def slider_alpha_event(self, val):
-        self.description_textbox3.configure(state="normal")
-        self.description_textbox3.insert('0.0', f'alpha value: {val:.2f} \n')
-        self.description_textbox3.configure(state="disable")
-        app.main_frame.home_frame.alpha = val
-    def slider_epoch_size_event(self, val):
-        self.description_textbox4.configure(state="normal")
-        self.description_textbox4.insert('0.0', f'epoch_size value: {val:.0f} \n')
-        self.description_textbox4.configure(state="disable")
-        app.main_frame.home_frame.epoch_size = val
+    def update_params(self):
+        self.t0 = self.parameters_slider_t0.get_value()
+        self.t1 = self.parameters_slider_t1.get_value()
+        self.alpha = self.parameters_slider_alpha.get_value()
+        self.epoch_size = self.parameters_slider_epoch_size.get_value()
+
 
 
 class GraphFrame(customtkinter.CTkFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._corner_radius=0
+        self._corner_radius = 0
         # self._fg_color="#FF0000"
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        self.heat_map_button = customtkinter.CTkButton(self, corner_radius=0, height=400, border_spacing=10, text=" Legend",
-                                                   fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("#d9d9d9", "#d9d9d9"),
-                                                   image=heat_map_image, anchor="w", 
-                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.heat_map_button = customtkinter.CTkButton(self, corner_radius=0, height=400, border_spacing=10,
+                                                       text=" Legend",
+                                                       fg_color="transparent", text_color=("gray10", "gray90"),
+                                                       hover_color=("#d9d9d9", "#d9d9d9"),
+                                                       image=heat_map_image, anchor="w",
+                                                       font=customtkinter.CTkFont(size=15, weight="bold"))
         self.heat_map_button.grid(row=0, column=1, padx=20, pady=(0, 20), sticky="ew")
 
         self.canvas = tk.Canvas(self, width=500, height=500)
         self.canvas.grid(row=0, column=0, padx=20, pady=(0, 20))
-        #self.canvas.pack()
+        # self.canvas.pack()
 
         self.fig = Figure(figsize=(8, 8))
         self.figure_canvas = FigureCanvasTkAgg(self.fig, self.canvas)
@@ -270,7 +277,6 @@ class GraphFrame(customtkinter.CTkFrame):
 
         self.draw_graph()
 
-    
     def temp(self):
         global graph_select
 
@@ -282,11 +288,11 @@ class GraphFrame(customtkinter.CTkFrame):
 
         global global_model
         self.G = nx.Graph()
-        for i in range(0, len(global_model.adjmatrix)):
+        for i in range(len(global_model.adjmatrix)):
             self.G.add_node(i)
-        
-        for i in range(0, len(global_model.adjmatrix)):
-            for j in range(0, len(global_model.adjmatrix)):
+
+        for i in range(len(global_model.adjmatrix)):
+            for j in range(len(global_model.adjmatrix)):
                 if global_model.adjmatrix[i, j] == 1:
                     self.G.add_edge(i, j)
 
@@ -294,18 +300,18 @@ class GraphFrame(customtkinter.CTkFrame):
 
         self.fig.clear()
         ax = self.fig.add_subplot(111)
-        
+
         # Model = app.main_frame.chart_frame.chart.Model
         # endpoints_ids = [e.id for e in Model.network.e_it]
         # pos_endpoints = nx.circular_layout(self.G.subgraph(endpoints_ids), scale=2)
         # pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
 
-        nx.draw(self.G, 
+        nx.draw(self.G,
                 # pos=pos, 
                 ax=ax, with_labels=True, font_weight='bold')
 
         self.fig.canvas.draw()
-    
+
     def draw_graph_with_colors(self):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
@@ -323,7 +329,6 @@ class GraphFrame(customtkinter.CTkFrame):
                 w2 = 0
             d['weight'] = w1 + w2
 
-
         endpoints_ids = [e.id for e in Model.network.e_it]
 
         pos_endpoints = nx.circular_layout(self.G.subgraph(endpoints_ids), scale=2)
@@ -335,30 +340,32 @@ class GraphFrame(customtkinter.CTkFrame):
         # ylim_max = max(y)
         # for it in range(100):
         pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
-            # x = [arr[0] for arr in pos.values()]
-            # y = [arr[1] for arr in pos.values()]
-            # if xlim_min <= min(x) and ylim_min <= min(y) and xlim_max >= max(x) and ylim_max >= max(y):
-            #     print(it)
-            #     break
-        
-        edges, weights = zip(*nx.get_edge_attributes(self.G,'weight').items())
-        nx.draw(self.G, pos=pos, node_color='b', edgelist=edges, edge_color=weights, width=5, edge_cmap=plt.cm.RdYlBu_r, ax=ax, with_labels=True)
+        # x = [arr[0] for arr in pos.values()]
+        # y = [arr[1] for arr in pos.values()]
+        # if xlim_min <= min(x) and ylim_min <= min(y) and xlim_max >= max(x) and ylim_max >= max(y):
+        #     print(it)
+        #     break
 
-        self.fig.canvas.draw()        
+        edges, weights = zip(*nx.get_edge_attributes(self.G, 'weight').items())
+        nx.draw(self.G, pos=pos, node_color='b', edgelist=edges, edge_color=weights, width=5, edge_cmap=plt.cm.RdYlBu_r,
+                ax=ax, with_labels=True)
+
+        self.fig.canvas.draw()
 
     def draw_graph_solution(self, target_id=8):
-    # def draw_graph_with_colors(self, target_id=8):
+        # def draw_graph_with_colors(self, target_id=8):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
 
         Model = app.main_frame.chart_frame.chart.Model
         solution = Model.solution
-        
+
         if solution is None:
             print('trying to draw solution graph with no solution')
 
         endpoints_gates = [(e.id, e.gate_id) for e in Model.network.e_it if e.id != target_id]
-        routers_directions = [(src_id, dst_id) for src_id, routing_table in solution.items() for key, dst_id in routing_table.items() if key == target_id]
+        routers_directions = [(src_id, dst_id) for src_id, routing_table in solution.items() for key, dst_id in
+                              routing_table.items() if key == target_id]
 
         G = self.G.to_directed()
         G.remove_edges_from(list(G.edges))
@@ -369,24 +376,25 @@ class GraphFrame(customtkinter.CTkFrame):
         pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
 
         nx.draw(G, pos=pos, ax=ax, with_labels=True, font_weight='bold')
-        self.fig.canvas.draw()        
-
+        self.fig.canvas.draw()
 
 
 class ChartFrame(customtkinter.CTkFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._corner_radius=0
+        self._corner_radius = 0
         # self._fg_color="#00FF00"
 
         self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(3, weight=1)
 
-        self.button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text=" Generate Chart",
-                                                   fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-                                                   image=home_image, anchor="w", command=self.plot_chart_button_event, 
-                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10,
+                                              text=" Generate Chart",
+                                              fg_color="transparent", text_color=("gray10", "gray90"),
+                                              hover_color=("gray70", "gray30"),
+                                              image=home_image, anchor="w", command=self.plot_chart_button_event,
+                                              font=customtkinter.CTkFont(size=15, weight="bold"))
         self.button.grid(row=0, column=0, sticky="ew")
 
         self.text_field = customtkinter.CTkTextbox(self, width=500, height=20, activate_scrollbars=False)
@@ -405,12 +413,11 @@ class ChartFrame(customtkinter.CTkFrame):
 
     def plot_chart_event(self):
         self.chart.reload()
-        self.chart.plot_chart(app.main_frame.home_frame.t0, 
-                              app.main_frame.home_frame.t1, 
-                              app.main_frame.home_frame.alpha, 
-                              app.main_frame.home_frame.epoch_size, 
+        self.chart.plot_chart(app.main_frame.home_frame.t0,
+                              app.main_frame.home_frame.t1,
+                              app.main_frame.home_frame.alpha,
+                              app.main_frame.home_frame.epoch_size,
                               app.main_frame.home_frame.neighbourhoods)
-
 
 
 class ChartInFrame(customtkinter.CTkFrame):
@@ -449,7 +456,8 @@ class ChartInFrame(customtkinter.CTkFrame):
             if data is None:
                 print('returning - end of simulation')
                 print(min_value, max_value, num_improvements)
-                app.main_frame.chart_frame.text_field.insert('0.0', f'min val: {min_value:.3f}, max val: {max_value:.3f}, num improvements: {num_improvements:.0f}\n')
+                app.main_frame.chart_frame.text_field.insert('0.0',
+                                                             f'min val: {min_value:.3f}, max val: {max_value:.3f}, num improvements: {num_improvements:.0f}\n')
                 simulation_ended = True
                 # app.main_frame.graph_frame.draw_graph_with_colors()
                 self.is_running = False
@@ -457,7 +465,7 @@ class ChartInFrame(customtkinter.CTkFrame):
             min_value = min(data)
             max_value = max(data)
             num_improvements = sum(prev > next for prev, next in zip(data[:-1], data[1:]))
-            
+
             self.draw_graph(data)
             event.set()
 
@@ -474,13 +482,12 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.after(2000, lambda: self.q.put(data2))
         self.after(4000, lambda: self.q.put(data3))
 
-
-    def plot_chart(self, t0=10e5, t1=10e-3, alpha=0.95, epoch_size=50, nbhood=[0, 0, 0, 0, 0, 0]):        
+    def plot_chart(self, t0=10e5, t1=10e-3, alpha=0.95, epoch_size=50, nbhood=[0, 0, 0, 0, 0, 0]):
         if self.is_running:
             return
         self.is_running = True
         app.main_frame.chart_frame.text_field.insert('0.0', 'simulation in progress...\n')
-        
+        # print(f'{t0:.2}  {t1:.5}  {alpha:.3}  {epoch_size}')
         self.Model.network.reset_state(with_schedule=False)
 
         neighbourhood = set()
@@ -505,12 +512,13 @@ class ChartInFrame(customtkinter.CTkFrame):
             neighbourhood.add(self.Model.change_solution4)
             neighbourhood.add(self.Model.change_solution5)
             neighbourhood.add(self.Model.change_solution6)
-        
+
         event = threading.Event()
         self.is_running = True
-        t1 = threading.Thread(daemon=True, target=self.Model.run_model, args=(t0, t1, alpha, epoch_size, neighbourhood, event))
-        t2 = threading.Thread(daemon=True, target=self.process_queue, args=(event, ))
-        
+        t1 = threading.Thread(daemon=True, target=self.Model.run_model,
+                              args=(t0, t1, alpha, epoch_size, neighbourhood, event))
+        t2 = threading.Thread(daemon=True, target=self.process_queue, args=(event,))
+
         t1.start()
         t2.start()
 
@@ -521,32 +529,64 @@ class NavigationFrame(customtkinter.CTkFrame):
 
         self.header_name = "NavigationFrame"
         self._corner_radius = 0
-        self.header = customtkinter.CTkLabel(self, text="  Network", image=home_network_image, compound="left", 
-                                             font=customtkinter.CTkFont(size=18, weight="bold"))
-        self.header.grid(row=0, column=0, padx=15, pady=15)
+        self.fg_color = "gray85"
 
-        self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
-        self.navigation_frame.grid_rowconfigure(4, weight=1)
+        self.grid_rowconfigure(4, weight=1)
+        self.header = customtkinter.CTkLabel(self, text="  Network", image=home_network_image, compound="left",
+                                             font=customtkinter.CTkFont(size=18, weight="bold"))
+        self.header.grid(row=0, column=0, padx=20, pady=20)
 
         # navigation buttons
-        self.home_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text=" Home",
-                                                   fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-                                                   image=home_image, anchor="w", command=self.home_button_event, 
+        self.home_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10,
+                                                   text=" Home",
+                                                   fg_color="transparent", text_color="gray10", hover_color="gray70",
+                                                   image=home_image, anchor="w", command=self.home_button_event,
                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
         self.home_button.grid(row=1, column=0, sticky="ew")
 
-        self.graph_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text=" Graph",
-                                                   fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-                                                   image=graph_image, anchor="w", command=self.graph_button_event, 
-                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.graph_button = customtkinter.CTkButton(self, corner_radius=0, height=40,
+                                                    border_spacing=10, text=" Graph",
+                                                    fg_color="transparent", text_color="gray10", hover_color="gray70",
+                                                    image=graph_image, anchor="w", command=self.graph_button_event,
+                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
         self.graph_button.grid(row=2, column=0, sticky="ew")
 
-        self.chart_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10, text=" Chart",
-                                                   fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
-                                                   image=chart_image, anchor="w", command=self.chart_button_event, 
-                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.chart_button = customtkinter.CTkButton(self, corner_radius=0, height=40,
+                                                    border_spacing=10, text=" Chart",
+                                                    fg_color="transparent", text_color="gray10", hover_color="gray70",
+                                                    image=chart_image, anchor="w", command=self.chart_button_event,
+                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
         self.chart_button.grid(row=3, column=0, sticky="ew")
 
+    def home_button_event(self):
+        self.highlight_selected_button(self.home_button)
+        app.main_frame.select_frame_by_name("home")
+
+    def graph_button_event(self):
+        self.highlight_selected_button(self.graph_button)
+        app.main_frame.select_frame_by_name("graph")
+        global prev_radio_var
+        global global_radio_var
+        global simulation_ended
+
+        if simulation_ended:
+            app.main_frame.graph_frame.draw_graph_with_colors()
+            simulation_ended = False
+        elif prev_radio_var != global_radio_var:
+            app.main_frame.graph_frame.temp()
+            prev_radio_var = global_radio_var
+
+    def chart_button_event(self):
+        self.highlight_selected_button(self.chart_button)
+        app.main_frame.select_frame_by_name("chart")
+
+    def highlight_selected_button(self, button):
+        self.home_button.configure(fg_color="transparent")
+        self.graph_button.configure(fg_color="transparent")
+        self.chart_button.configure(fg_color="transparent")
+
+        # highlight selected button
+        button.configure(fg_color=("gray75", "gray25"))
 
 
 class MainFrame(customtkinter.CTkFrame):
@@ -558,32 +598,8 @@ class MainFrame(customtkinter.CTkFrame):
         self.grid_columnconfigure(1, weight=1)
 
         # navigation frame
-        self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0, fg_color="gray85")
+        self.navigation_frame = NavigationFrame(self)
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
-        self.navigation_frame.grid_rowconfigure(4, weight=1)
-
-        self.navigation_frame_label = customtkinter.CTkLabel(self.navigation_frame, text="  Network", image=home_network_image,
-                                                             compound="left", font=customtkinter.CTkFont(size=18, weight="bold"))
-        self.navigation_frame_label.grid(row=0, column=0, padx=20, pady=20)
-
-        self.home_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text=" Home",
-                                                   fg_color="transparent", text_color="gray10", hover_color="gray70",
-                                                   image=home_image, anchor="w", command=self.home_button_event, 
-                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.home_button.grid(row=1, column=0, sticky="ew")
-
-        self.graph_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text=" Graph",
-                                                    fg_color="transparent", text_color="gray10", hover_color="gray70",
-                                                    image=graph_image, anchor="w", command=self.graph_button_event,
-                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.graph_button.grid(row=2, column=0, sticky="ew")
-
-        self.chart_button = customtkinter.CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text=" Chart",
-                                                    fg_color="transparent", text_color="gray10", hover_color="gray70",
-                                                    image=chart_image, anchor="w", command=self.chart_button_event,
-                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.chart_button.grid(row=3, column=0, sticky="ew")
-
 
         self.home_frame = HomeFrame(self)
         self.graph_frame = GraphFrame(self)
@@ -591,14 +607,10 @@ class MainFrame(customtkinter.CTkFrame):
 
         # select default frame
         self.select_frame_by_name("home")
+        self.navigation_frame.highlight_selected_button(self.navigation_frame.home_button)
 
     def select_frame_by_name(self, name):
-        # set button color for selected button
-        self.home_button.configure(fg_color=("gray75", "gray25") if name == "home" else "transparent")
-        self.graph_button.configure(fg_color=("gray75", "gray25") if name == "graph" else "transparent")
-        self.chart_button.configure(fg_color=("gray75", "gray25") if name == "chart" else "transparent")
-
-        # show selected frame
+        self.home_frame.update_params()
         if name == "home":
             self.home_frame.grid(row=0, column=1, sticky="nsew")
         else:
@@ -611,28 +623,6 @@ class MainFrame(customtkinter.CTkFrame):
             self.chart_frame.grid(row=0, column=1, sticky="nsew")
         else:
             self.chart_frame.grid_forget()
-
-    
-    def home_button_event(self):
-        self.select_frame_by_name("home")
-
-    def graph_button_event(self):
-        self.select_frame_by_name("graph")
-        global prev_radio_var
-        global global_radio_var
-        global simulation_ended
-
-        if simulation_ended:
-            self.graph_frame.draw_graph_with_colors()
-            simulation_ended = False
-        elif prev_radio_var != global_radio_var:
-            self.graph_frame.temp()
-            prev_radio_var = global_radio_var
-        
-
-    def chart_button_event(self):
-        self.select_frame_by_name("chart")
-
 
 
 class App(customtkinter.CTk):
