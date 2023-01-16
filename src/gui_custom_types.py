@@ -19,6 +19,116 @@ import my_model
 import copy
 
 
+class OptionMenuWithName(customtkinter.CTkFrame):
+    def __init__(self, *args, options=[1, 2], name='name', command=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.options = []
+        self.name = name
+
+        for it, val in enumerate(options):
+            self.options.append(str(val))
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        self.option_menu = customtkinter.CTkOptionMenu(self, values=self.options, width=100, height=20, command=command)
+        self.option_menu.grid(row=0, column=1, padx=(0, 0), pady=0, sticky='ew')
+
+        self.name = customtkinter.CTkButton(self, corner_radius=0, width=90, height=20, border_spacing=10,
+                                                   text=f'{name}:',
+                                                   fg_color="transparent", text_color="gray10", hover=False,
+                                                   anchor="e",
+                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.name.grid(row=0, column=0, padx=(0, 0), pady=0, sticky='ew')
+
+    def option_menu_callback(self, id):
+        return id
+
+    def reload(self, options):
+        self.options = []
+        for _, val in enumerate(options):
+            self.options.append(str(val))
+
+        self.option_menu.configure(values=self.options)
+        self.option_menu.set(self.options[0])
+
+
+
+class TextboxWithName(customtkinter.CTkFrame):
+    def __init__(self, *args, value=5, name='name', set_precision=2, use_precision=True,
+                 v_witdth=90, v_height=20, v_activate_scrollbars=False, v_border_spacing=0, v_state='disable',
+                 m_witdth=90, m_height=20, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.value = value
+        self.name = name
+        self.set_precision = set_precision
+        self.use_precision = use_precision
+
+        self._bg_color = '#e5e5e5'
+        self._fg_color = '#e5e5e5'
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        self.value_textbox = customtkinter.CTkTextbox(self, width=v_witdth, height=v_height, activate_scrollbars=v_activate_scrollbars, border_spacing=v_border_spacing, state=v_state)
+        self.value_textbox.grid(row=0, column=1, padx=(0, 0), pady=0, sticky='ew')
+
+        self.name = customtkinter.CTkButton(self, corner_radius=0, width=m_witdth, height=m_height, border_spacing=10,
+                                                   text=f'{name}:',
+                                                   fg_color="transparent", text_color="gray10", hover=False,
+                                                   anchor="e",
+                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.name.grid(row=0, column=0, padx=(0, 0), pady=0, sticky='ew')
+
+    def change_value(self, val):
+        self.value_textbox.configure(state="normal")
+        self.value_textbox.delete('0.0', 'end')
+        if self.use_precision:
+            self.value_textbox.insert("0.0", f'{val:.{self.set_precision}}')
+        else:
+            self.value_textbox.insert("0.0", f'{val}')
+        self.value_textbox.configure(state="disabled")
+    
+    def reset_value(self):
+        self.value_textbox.configure(state="normal")
+        self.value_textbox.delete('0.0', 'end')
+        self.value_textbox.configure(state="disabled")     
+
+
+class EssentialsTextField(customtkinter.CTkFrame):
+    def __init__(self, *args, min_value=5, max_value=8, iterations=20, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.min_value = min_value
+        self.max_value = max_value
+        self.iterations = iterations
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+
+        self.min_textbox = TextboxWithName(self, value=10, name='MIN')
+        self.min_textbox.grid(row=0, column=0, padx=(0, 10), pady=10, sticky='ew')
+
+        self.max_textbox = TextboxWithName(self, value=10, name='MAX')
+        self.max_textbox.grid(row=0, column=1, padx=10, pady=10, sticky='ew')
+
+        self.iterations_textbox = TextboxWithName(self, value=10, name='ITERATIONS', use_precision=False)
+        self.iterations_textbox.grid(row=0, column=2, padx=10, pady=10, sticky='ew')
+
+    
+    def set_values(self, min_val, max_val, iter_val):
+        self.min_textbox.change_value(min_val)
+        self.max_textbox.change_value(max_val)
+        self.iterations_textbox.change_value(iter_val)
+
+    def clean_values(self):
+        self.min_textbox.reset_value()
+        self.max_textbox.reset_value()
+        self.iterations_textbox.reset_value()
+
+
+
 class SliderBlock(customtkinter.CTkFrame):
     def __init__(self, *args, value=1_000, name='t0', slider_start=0, slider_end=8, min_value=1, max_value=1_000_000,
                  scale_fun=lambda x: x, inverse_fun=lambda x: x, default_value=1_000, steps=100_000, round_factor=2, **kwargs):
@@ -36,18 +146,17 @@ class SliderBlock(customtkinter.CTkFrame):
         self.inverse_fun = inverse_fun
 
         self._corner_radius = 0
-        print(self.scale_fun(1_000))
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(5, weight=1)
         self.slider = customtkinter.CTkSlider(self, from_=slider_start, to=slider_end, command=self.slider_event, number_of_steps=steps, corner_radius=0)
         self.slider.grid(row=0, column=1, columnspan=4, padx=(20, 20), pady=7, sticky='ew')
-        self.slider.set(self.default_value)
+        self.slider.set(self.scale_fun(self.default_value))
 
         self.value_textbox = customtkinter.CTkTextbox(self, width=90, height=20, activate_scrollbars=False, border_spacing=0)
         self.value_textbox.grid(row=0, column=5, padx=(20, 20), pady=7, sticky="nsew")
         # self.value_textbox.configure(state="normal")
-        self.value_textbox.insert("0.0", f'{self.default_value}')
+        self.value_textbox.insert("0.0", f'{self.default_value:.{self.round_factor}f}')
         # self.value_textbox.configure(state="disabled")
 
 
