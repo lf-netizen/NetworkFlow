@@ -35,7 +35,7 @@ chart_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "lin
 heat_map_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "color_map.png")), size=(30, 250))
 white_play_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "white_play_button.png")), size=(30, 30))
 green_play_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "green_play_button.png")), size=(30, 30))
-grey_chart_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "neural-network-gray.png")), size=(30, 30))
+gray_chart_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "neural-network-gray.png")), size=(30, 30))
 
 class Wrapper:
     def __init__(self) -> None:
@@ -66,7 +66,14 @@ class Wrapper:
         nbhoods = set(compress(nbhoods_fun, self.nbhoods))
 
         self.model.network.reset_state(with_schedule=False)
-        self.model.run_model(self.t0, self.t1, self.alpha, self.epoch_size, nbhoods, *args)
+        _, _, data = self.model.run_model(self.t0, self.t1, self.alpha, self.epoch_size, nbhoods, *args)
+        self.logs['min_value'] = min(data)
+        self.logs['max_value'] = max(data)
+        self.logs['iterations'] = len(data)
+        self.logs['num_improvements'] = sum(prev < next for prev, next in zip(data[:-1], data[1:]))
+        self.logs['num_deteriorations'] = sum(prev > next for prev, next in zip(data[:-1], data[1:]))
+
+
 
 
 # pop-up window with rooting table called in ChartFrame
@@ -601,9 +608,6 @@ class ChartInFrame(customtkinter.CTkFrame):
             if data is None:
                 app.on_simulation_end()
                 return
-            wrapper.logs['min_value'] = min(data)
-            wrapper.logs['max_value'] = max(data)
-            wrapper.logs['num_improvements'] = sum(prev > next for prev, next in zip(data[:-1], data[1:]))
 
             self.draw_graph(data)
             event.set()
@@ -664,10 +668,6 @@ class NavigationFrame(customtkinter.CTkFrame):
         app.main_frame.select_frame_by_name("chart")
     
     def run_button_event(self):
-        # unlock simulation button
-        self.chart_button.configure(state='normal')
-        self.chart_button.configure(image=grey_chart_image)
-
         # open chart_frame
         self.highlight_selected_button(self.chart_button)
         app.main_frame.select_frame_by_name("chart")
@@ -675,6 +675,14 @@ class NavigationFrame(customtkinter.CTkFrame):
 
         # run simulation
         app.main_frame.chart_frame.plot_chart()
+
+    def block_simulation_button(self):
+        self.chart_button.configure(state='disabled')
+        self.chart_button.configure(image=gray_chart_image)
+    
+    def enable_simulation_button(self):
+        self.chart_button.configure(state='normal')
+        self.chart_button.configure(image=chart_image)
 
 
     def highlight_selected_button(self, button):
@@ -750,6 +758,7 @@ class App(customtkinter.CTk):
         self.main_frame.chart_frame.colored_graph.update_graph()
         self.main_frame.chart_frame.arrow_graph.update_graph()
         self.main_frame.chart_frame.arrow_graph.option_menu.reload([e.id for e in wrapper.model.network.e_it])
+        app.main_frame.navigation_frame.block_simulation_button()
 
     def on_simulation_begin(self):
         self.simulation_running = True
@@ -758,6 +767,7 @@ class App(customtkinter.CTk):
         app.main_frame.chart_frame.rooting_table_button.grid_forget()
         app.main_frame.chart_frame.simulation_in_progres_text.grid(row=2, column=0, columnspan=2, sticky='sew')
         #app.main_frame.chart_frame.text_field.insert('0.0', 'simulation in progress...\n')
+        app.main_frame.navigation_frame.enable_simulation_button()
 
     def on_simulation_end(self):
         self.simulation_running = False
