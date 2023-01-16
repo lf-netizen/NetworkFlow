@@ -189,12 +189,14 @@ def unpack_json(json_data: str) -> None:
     model_data['schedule'] = {int(k): v for k, v in model_data['schedule'].items()}
     return np.array(model_data['adjmatrix']), model_data['arch'], model_data['schedule']
 
-def model_load(name):
-    # Load the JSON data from the file
-    with open(f"models/{name}.json", "r") as json_file:
-        json_data = json_file.read()
-    
-    return unpack_json(json_data)
+def model_from_file(name) -> callable:
+    def loader():
+        # Load the JSON data from the file
+        with open(f"models/{name}.json", "r") as json_file:
+            json_data = json_file.read()
+        
+        return unpack_json(json_data)
+    return loader
 
 def model_save(name, adjmatrix, arch, schedule):
     model_data = {
@@ -208,13 +210,13 @@ def model_save(name, adjmatrix, arch, schedule):
 
 
 def dense_model_predefined():
-    return model_load('predefined_dense')
+    return model_from_file('predefined_dense')()
 
 def sparse_model_predefined():
-    return model_load('predefined_sparse')
+    return model_from_file('predefined_sparse')()
 
 def mean_model_predefined():
-    return model_load('predefined_mean')
+    return model_from_file('predefined_mean')()
     
 
 if __name__ == "__main__":

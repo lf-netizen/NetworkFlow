@@ -20,7 +20,7 @@ import copy
 from itertools import compress
 from gui_custom_types import SliderBlock
 
-from model import model_load, unpack_json, model1, model2, model3
+from model import model_from_file, unpack_json, model1, model2, model3
 
 customtkinter.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -221,16 +221,14 @@ class HomeFrame(customtkinter.CTkFrame):
 
     def graph_reload_event(self):
         graph_id = self.radio_graph_reload.get()
-        print(graph_id)
-
         if graph_id == 0:
             wrapper.load_network(model1, 'model1')
         elif graph_id == 1:
             wrapper.load_network(model2, 'model2')
         elif graph_id == 2:
-            wrapper.load_network(model_load, 'predefined_dense', 'predefined_dense')
+            wrapper.load_network(model_from_file('predefined_dense'), 'predefined_dense')
         elif graph_id == 3:
-            wrapper.load_network(model_load, 'predefined_sparse', 'predefined_sparse')
+            wrapper.load_network(model_from_file('predefined_sparse'), 'predefined_sparse')
 
         app.on_model_load()
 
