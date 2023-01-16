@@ -76,22 +76,44 @@ class Wrapper:
 
 
 
-# pop-up window with rooting table called in ChartFrame
-class RootingTableWindow(customtkinter.CTkToplevel):
-    def __init__(self):
+# pop-up window class
+class PopUpWindow(customtkinter.CTkToplevel):
+    def __init__(self, command_when_saved):
         super().__init__()
-        self.title("Rooting Table")  # window title
+        self.title("Upload model")  # window title
         self.geometry(f"{500}x{500}")
         self.minsize(400, 400)
+        self.command_when_saved = command_when_saved
 
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
         self.textbox = customtkinter.CTkTextbox(self, width=300, height=300)
         self.textbox.grid(row=0, column=0)
-    
+
+        self.button = customtkinter.CTkButton(self,
+                                            width=50,
+                                            height=40, border_spacing=10,
+                                            border_width=0,
+                                            corner_radius=8,
+                                            text="SAVE",
+                                            command=self.button_event, font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.button.grid(row=1, column=0)
+
     def write_to_textbox(self, string):
         self.textbox.insert('0.0', string)
+
+    def read_from_textbox(self) -> str:
+        return self.textbox.get('0.0', 'end')
+
+    def button_event(self) -> str:
+        with open("src/my_model.py", "w") as f:
+            f.truncate()
+            f.write(f'from custom_types import ID\nimport numpy as np\n{self.read_from_textbox()}')
+        self.withdraw()
+        self.command_when_saved()
+
+        
 
 
 class ArrowGraph(customtkinter.CTkFrame):
@@ -232,6 +254,20 @@ class ColoredGraph(customtkinter.CTkFrame):
                 ax=ax, with_labels=True)
 
         self.fig.canvas.draw()
+
+
+class RoutingTable(customtkinter.CTkFrame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)  
+
+        self.textbox = customtkinter.CTkTextbox(self, width=500, height=500, activate_scrollbars=False)
+        self.textbox.grid(row=0, column=0)
+    
+    def write_to_textbox(self, string):
+        self.textbox.insert('0.0', string)
 
 
 class HomeFrame(customtkinter.CTkFrame):
@@ -405,16 +441,17 @@ class GraphFrame(customtkinter.CTkFrame):
                                                                 variable=self.radio_graph_reload, value=2, text="network 3")
         self.radio_3.grid(row=3, column=0, padx=20, pady=10)
         self.radio_4 = customtkinter.CTkRadioButton(self.model_selection_frame, command=self.graph_reload_event,
-                                                                variable=self.radio_graph_reload, value=3, text="my_network")
+                                                                variable=self.radio_graph_reload, value=3, text="my_network", state=tkinter.DISABLED)
         self.radio_4.grid(row=4, column=0, padx=20, pady=10)
 
-        self.import_model_button = customtkinter.CTkButton(self, corner_radius=0, height=400, border_spacing=10,
-                                                       text=" Upload\nmodel",
-                                                       fg_color="transparent", text_color=("gray10", "gray90"),
-                                                       hover_color=("#d9d9d9", "#d9d9d9"),
-                                                       anchor="w", command=self.import_model_event,
-                                                       font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.import_model_button.grid(row=1, column=1, padx=20, pady=(0, 20), sticky="ew")
+        self.import_model_button = customtkinter.CTkButton(self,
+                                                             width=50,
+                                                             height=40, border_spacing=10,
+                                                             border_width=0,
+                                                             corner_radius=8,
+                                                             text="Upload\nmodel",
+                                                             command=self.import_model_event, font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.import_model_button.grid(row=1, column=1, padx=20, pady=(0, 20), sticky="sew")
         
 
         self.canvas = tk.Canvas(self, width=500, height=500)
@@ -427,8 +464,11 @@ class GraphFrame(customtkinter.CTkFrame):
 
 
     def import_model_event(self):
-        import_window = RootingTableWindow()
+        self.import_window = PopUpWindow(self.import_window_command)
 
+    def import_window_command(self):
+        self.radio_4.configure(state=tkinter.NORMAL)
+        
 
 
     def graph_reload_event(self):
@@ -476,7 +516,7 @@ class ChartFrame(customtkinter.CTkFrame):
         # self._fg_color="#00FF00"
 
         self.grid_rowconfigure(2, weight=1)
-        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(3, weight=1)
 
         self.chart_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10,
                                                    text="Chart",
@@ -499,18 +539,27 @@ class ChartFrame(customtkinter.CTkFrame):
                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
         self.arrow_graph_button.grid(row=0, column=2, sticky='ew')
 
-        self.text_field = customtkinter.CTkTextbox(self, width=500, height=20, activate_scrollbars=False)
-        self.text_field.grid(row=1, column=0, columnspan=2, padx=(20, 20), pady=(25, 14), sticky="nsew")
+        self.routing_table_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10,
+                                                   text="Routing table",
+                                                   fg_color="transparent", text_color="gray10", hover_color="gray70",
+                                                   anchor="w", command=self.routing_table_button_event,
+                                                   font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.routing_table_button.grid(row=0, column=3, sticky='ew')
 
+        # self.text_field = customtkinter.CTkTextbox(self, width=500, height=20, activate_scrollbars=False)
+        # self.text_field.grid(row=2, column=0, columnspan=4, padx=(20, 20), pady=(25, 14), sticky="nsew")
 
         self.colored_graph = ColoredGraph(self)
-        self.colored_graph.grid(row=1, column=0, columnspan=3, sticky='nsew')
+        self.colored_graph.grid(row=1, column=0, columnspan=4, sticky='nsew')
 
         self.arrow_graph = ArrowGraph(self)
-        self.arrow_graph.grid(row=1, column=0, columnspan=3, sticky='nsew')
+        self.arrow_graph.grid(row=1, column=0, columnspan=4, sticky='nsew')
 
         self.chart = ChartInFrame(self)
-        self.chart.grid(row=1, column=0, columnspan=3, sticky='nsew')
+        self.chart.grid(row=1, column=0, columnspan=4, sticky='nsew')
+
+        self.routing_table = RoutingTable(self)
+        self.routing_table.grid(row=1, column=0, columnspan=4, sticky='nsew')
 
 
         self.simulation_params = EssentialsTextField(self)
@@ -520,14 +569,24 @@ class ChartFrame(customtkinter.CTkFrame):
                                                    fg_color="transparent", text_color="gray10", hover=False,
                                                    anchor="nesw",
                                                    font=customtkinter.CTkFont(size=20, weight="bold"))
-        self.simulation_in_progres_text.grid(row=2, column=0, columnspan=3, sticky='sew')
+        self.simulation_in_progres_text.grid(row=2, column=0, columnspan=4, sticky='sew')
     
-        self.rooting_table_button = customtkinter.CTkButton(self, text="Rooting\ntable", command=self.rooting_table_button_event)
+        # self.routing_table_button = customtkinter.CTkButton(self, text="Routing\ntable", command=self.routing_table_button_event)
         
 
-    def rooting_table_button_event(self):
-        rooting_table_window = RootingTableWindow()
-        rooting_table_window.write_to_textbox(wrapper.model.solution)
+    def routing_table_button_event(self):
+        self.select_frame_by_button(self.routing_table_button)
+        str_solution = wrapper.model.solution      # }, 
+        # list_of_enters = []
+        # for iter, char in str_solution:
+        #     if char == '}':
+        #         list_of_enters.append(iter)
+        
+        # prev = 0
+        # for elem in list_of_enters:
+        self.routing_table.write_to_textbox(wrapper.model.solution)
+
+        #     prev = elem
 
     def chart_button_event(self):
         self.select_frame_by_button(self.chart_button)
@@ -543,23 +602,27 @@ class ChartFrame(customtkinter.CTkFrame):
 
         # self.home_frame.update_params()
         if button == self.chart_button:
-            self.chart.grid(row=1, column=0, columnspan=3, sticky='nsew')
+            self.chart.grid(row=1, column=0, columnspan=4, sticky='nsew')
         else:
             self.chart.grid_forget()
         if button == self.colored_graph_button:
-            self.colored_graph.grid(row=1, column=0, columnspan=3, sticky='nsew')
+            self.colored_graph.grid(row=1, column=0, columnspan=4, sticky='nsew')
         else:
             self.colored_graph.grid_forget()
         if button == self.arrow_graph_button:
-            self.arrow_graph.grid(row=1, column=0, columnspan=3, sticky='nsew')
+            self.arrow_graph.grid(row=1, column=0, columnspan=4, sticky='nsew')
         else:
             self.arrow_graph.grid_forget()
-
+        if button == self.routing_table_button:
+            self.routing_table.grid(row=1, column=0, columnspan=4, sticky='nsew')
+        else:
+            self.routing_table.grid_forget()
 
     def highlight_selected_button(self, button):
         self.chart_button.configure(fg_color="transparent")
         self.colored_graph_button.configure(fg_color="transparent")
         self.arrow_graph_button.configure(fg_color="transparent")
+        self.routing_table_button.configure(fg_color='transparent')
 
         # highlight selected button
         button.configure(fg_color=("gray75", "gray25"))
@@ -588,7 +651,7 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.canvas = tk.Canvas(self, width=500, height=500)
         self.canvas.pack()
 
-        self.fig = Figure(figsize=(100, 6))
+        self.fig = Figure(figsize=(50, 6))
         self.figure_canvas = FigureCanvasTkAgg(self.fig, self.canvas)
         self.figure_canvas.draw()
         self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
@@ -764,9 +827,7 @@ class App(customtkinter.CTk):
         self.simulation_running = True
         # TA LINIJKA DO OSOBNEJ FUNKCJI W CHART FRAME
         app.main_frame.chart_frame.simulation_params.grid_forget()
-        app.main_frame.chart_frame.rooting_table_button.grid_forget()
         app.main_frame.chart_frame.simulation_in_progres_text.grid(row=2, column=0, columnspan=2, sticky='sew')
-        #app.main_frame.chart_frame.text_field.insert('0.0', 'simulation in progress...\n')
         app.main_frame.navigation_frame.enable_simulation_button()
 
     def on_simulation_end(self):
@@ -776,10 +837,8 @@ class App(customtkinter.CTk):
         self.main_frame.chart_frame.colored_graph.draw_graph_with_colors()
         # TA LINIJKA DO OSOBNEJ FUNKCJI W CHART FRAME
         app.main_frame.chart_frame.simulation_in_progres_text.grid_forget()
-        app.main_frame.chart_frame.simulation_params.grid(row=2, column=0, columnspan=2, sticky='sew')
-        app.main_frame.chart_frame.rooting_table_button.grid(row=2, column=2, padx=40, pady=40)
-        app.main_frame.chart_frame.simulation_params.set_values(wrapper.logs['min_value'], wrapper.logs['max_value'], wrapper.logs['num_improvements'])
-        # app.main_frame.chart_frame.text_field.insert('0.0', f"min val: {wrapper.logs['min_value']:.3f}, max val: {wrapper.logs['max_value']:.3f}, num improvements: {wrapper.logs['num_improvements']:.0f}\n")
+        app.main_frame.chart_frame.simulation_params.grid(row=2, column=0, columnspan=4, sticky='sw')
+        app.main_frame.chart_frame.simulation_params.set_values(wrapper.logs['min_value'], wrapper.logs['max_value'], wrapper.logs['num_improvements'], wrapper.logs['iterations'], wrapper.logs['num_deteriorations'])
 
 
 if __name__ == "__main__":

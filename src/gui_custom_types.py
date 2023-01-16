@@ -56,8 +56,8 @@ class OptionMenuWithName(customtkinter.CTkFrame):
 
 class TextboxWithName(customtkinter.CTkFrame):
     def __init__(self, *args, value=5, name='name', set_precision=2, use_precision=True,
-                 v_witdth=90, v_height=20, v_activate_scrollbars=False, v_border_spacing=0, v_state='disable',
-                 m_witdth=90, m_height=20, **kwargs):
+                 v_witdth=60, v_height=20, v_activate_scrollbars=False, v_border_spacing=0, v_state='disable',
+                 m_witdth=70, m_height=20, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.value = value
@@ -71,10 +71,10 @@ class TextboxWithName(customtkinter.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        self.value_textbox = customtkinter.CTkTextbox(self, width=v_witdth, height=v_height, activate_scrollbars=v_activate_scrollbars, border_spacing=v_border_spacing, state=v_state)
+        self.value_textbox = customtkinter.CTkTextbox(self, width=v_witdth, height=v_height, bg_color='#e5e5e5', activate_scrollbars=v_activate_scrollbars, border_spacing=v_border_spacing, state=v_state)
         self.value_textbox.grid(row=0, column=1, padx=(0, 0), pady=0, sticky='ew')
 
-        self.name = customtkinter.CTkButton(self, corner_radius=0, width=m_witdth, height=m_height, border_spacing=10,
+        self.name = customtkinter.CTkButton(self, corner_radius=0, width=m_witdth, height=m_height, border_spacing=6,
                                                    text=f'{name}:',
                                                    fg_color="transparent", text_color="gray10", hover=False,
                                                    anchor="e",
@@ -97,35 +97,46 @@ class TextboxWithName(customtkinter.CTkFrame):
 
 
 class EssentialsTextField(customtkinter.CTkFrame):
-    def __init__(self, *args, min_value=5, max_value=8, iterations=20, **kwargs):
+    def __init__(self, *args, min_value=5, max_value=8, improvements=20, iterations=10, deteriations=10, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.min_value = min_value
         self.max_value = max_value
+        self.improvements = improvements
         self.iterations = iterations
+        self.deteriations = deteriations
 
         self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(4, weight=1)
 
         self.min_textbox = TextboxWithName(self, value=10, name='MIN')
-        self.min_textbox.grid(row=0, column=0, padx=(0, 10), pady=10, sticky='ew')
+        self.min_textbox.grid(row=0, column=0, padx=0, pady=10, sticky='ew')
 
         self.max_textbox = TextboxWithName(self, value=10, name='MAX')
-        self.max_textbox.grid(row=0, column=1, padx=10, pady=10, sticky='ew')
+        self.max_textbox.grid(row=0, column=1, padx=0, pady=10, sticky='ew')
+
+        self.improvements_textbox = TextboxWithName(self, value=10, name='IMPROVEMENTS', use_precision=False)
+        self.improvements_textbox.grid(row=0, column=2, padx=8, pady=10, sticky='ew')
 
         self.iterations_textbox = TextboxWithName(self, value=10, name='ITERATIONS', use_precision=False)
-        self.iterations_textbox.grid(row=0, column=2, padx=10, pady=10, sticky='ew')
+        self.iterations_textbox.grid(row=0, column=3, padx=8, pady=10, sticky='ew')
 
-    
-    def set_values(self, min_val, max_val, iter_val):
+        self.deteriorations_textbox = TextboxWithName(self, value=10, name='DETERIORATIONS', use_precision=False)
+        self.deteriorations_textbox.grid(row=0, column=4, padx=(8, 20), pady=10, sticky='ew')
+
+    def set_values(self, min_val, max_val, improvements, iterations, deteriorations):
         self.min_textbox.change_value(min_val)
         self.max_textbox.change_value(max_val)
-        self.iterations_textbox.change_value(iter_val)
+        self.improvements_textbox.change_value(improvements)
+        self.iterations_textbox.change_value(iterations)
+        self.deteriorations_textbox.change_value(deteriorations)
 
     def clean_values(self):
         self.min_textbox.reset_value()
         self.max_textbox.reset_value()
+        self.improvements_textbox.reset_value()
         self.iterations_textbox.reset_value()
+        self.deteriorations_textbox.reset_value()
 
 
 
