@@ -17,7 +17,10 @@ import threading
 import model
 import my_model
 import copy
+from itertools import compress
 from gui_custom_types import SliderBlock
+
+from model import model_load, unpack_json, model1, model2, model3
 
 customtkinter.set_appearance_mode("Light")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -31,21 +34,36 @@ graph_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "neu
 chart_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "line-chart.png")), size=(30, 30))
 heat_map_image = customtkinter.CTkImage(Image.open(os.path.join(my_image_path, "color_map.png")), size=(30, 250))
 
-simulation_ended = False
-global_radio_var = 0
-graph_select = 0
+class Wrapper:
+    def __init__(self) -> None:
+        self.model_name = None
+        self.model = None
+        self.logs = {}
 
-adjmatrix, arch, schedule = model.model1()
-global_network = Network(arch)
-global_network.load_schedule(schedule)
-global_model = OptimizationModel(global_network, adjmatrix)
-prev_radio_var = 0
+        self.alpha = 0.95
+        self.t0 = 100
+        self.t1 = 1
+        self.epoch_size = 10
+        self.nbhoods = [1] * 6
+    
+    def load_network(self, loader: callable, model_name: str = None, *args) -> None:
+        if self.model_name == model_name:
+            return
 
-# results of simulation to display
-min_value = None
-max_value = None
-num_improvements = None
+        adjmatrix, arch, schedule = loader(*args)
+        
+        Network.reset_devices_ids()
+        network = Network(arch)
+        network.load_schedule(schedule)
+        self.model =  OptimizationModel(network, adjmatrix)
+        self.model_name = model_name
+    
+    def simulate(self, *args) -> None:
+        nbhoods_fun = [self.model.change_solution, self.model.change_solution2, self.model.change_solution3, self.model.change_solution4, self.model.change_solution5, self.model.change_solution6]
+        nbhoods = set(compress(nbhoods_fun, self.nbhoods))
 
+        self.model.network.reset_state(with_schedule=False)
+        self.model.run_model(self.t0, self.t1, self.alpha, self.epoch_size, nbhoods, *args)
 
 class HomeFrame(customtkinter.CTkFrame):
     def __init__(self, *args, **kwargs):
@@ -64,14 +82,6 @@ class HomeFrame(customtkinter.CTkFrame):
 
         self.neighbourhood_frame.grid_rowconfigure(8, weight=1)
         self.neighbourhood_frame.grid_columnconfigure(1, weight=1)
-
-        # define simulation parameters ##############
-        self.t0 = 10e5  # =1_000_000
-        self.t1 = 10e-3  # =0.01
-        self.alpha = 0.95
-        self.epoch_size = 50
-        self.neighbourhoods = [0, 0, 0, 0, 0, 0]
-        ###
 
         self.switch_var1 = customtkinter.StringVar(value="on")
         self.switch_var2 = customtkinter.StringVar(value="on")
@@ -104,18 +114,18 @@ class HomeFrame(customtkinter.CTkFrame):
         self.start_graph_frame.grid_rowconfigure(4, weight=1)
         self.start_graph_frame.grid_columnconfigure(0, weight=1)
 
-        self.radio_var = tkinter.IntVar(value=0)
-        self.start_graph_radio_1 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event,
-                                                                variable=self.radio_var, value=0, text="graph 1")
+        self.radio_graph_reload = tkinter.IntVar(value=0)
+        self.start_graph_radio_1 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.graph_reload_event,
+                                                                variable=self.radio_graph_reload, value=0, text="graph 1")
         self.start_graph_radio_1.grid(row=0, column=0, padx=20, pady=10)
-        self.start_graph_radio_2 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event,
-                                                                variable=self.radio_var, value=1, text="graph 2")
+        self.start_graph_radio_2 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.graph_reload_event,
+                                                                variable=self.radio_graph_reload, value=1, text="graph 2")
         self.start_graph_radio_2.grid(row=1, column=0, padx=20, pady=10)
-        self.start_graph_radio_3 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event,
-                                                                variable=self.radio_var, value=2, text="graph 3")
+        self.start_graph_radio_3 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.graph_reload_event,
+                                                                variable=self.radio_graph_reload, value=2, text="graph 3")
         self.start_graph_radio_3.grid(row=2, column=0, padx=20, pady=10)
-        self.start_graph_radio_4 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.radio_event,
-                                                                variable=self.radio_var, value=3, text="my_model")
+        self.start_graph_radio_4 = customtkinter.CTkRadioButton(self.start_graph_frame, command=self.graph_reload_event,
+                                                                variable=self.radio_graph_reload, value=3, text="my_model")
         self.start_graph_radio_4.grid(row=3, column=0, padx=20, pady=10)
 
 
@@ -192,56 +202,43 @@ class HomeFrame(customtkinter.CTkFrame):
             f.write(f'from custom_types import ID\nimport numpy as np\n{text}')
 
     def switch1_event(self):
-        self.neighbourhoods[0] = self.switch_var1.get()
+        wrapper.nbhoods[0] = self.switch_var1.get()
 
     def switch2_event(self):
-        self.neighbourhoods[1] = self.switch_var1.get()
+        wrapper.nbhoods[1] = self.switch_var1.get()
 
     def switch3_event(self):
-        self.neighbourhoods[2] = self.switch_var1.get()
+        wrapper.nbhoods[2] = self.switch_var1.get()
 
     def switch4_event(self):
-        self.neighbourhoods[3] = self.switch_var1.get()
+        wrapper.nbhoods[3] = self.switch_var1.get()
 
     def switch5_event(self):
-        self.neighbourhoods[4] = self.switch_var1.get()
+        wrapper.nbhoods[4] = self.switch_var1.get()
 
     def switch6_event(self):
-        self.neighbourhoods[5] = self.switch_var1.get()
+        wrapper.nbhoods[5] = self.switch_var1.get()
 
-    def radio_event(self):
-        global prev_radio_var
-        global global_network
-        global global_model
-        global graph_select
-        global glabal_radio_var
-        global_radio_var = self.radio_var.get()
+    def graph_reload_event(self):
+        graph_id = self.radio_graph_reload.get()
+        print(graph_id)
 
-        print(f'{prev_radio_var}  {global_radio_var}')
-        if prev_radio_var != global_radio_var:
-            prev_radio_var = global_radio_var
-            graph_select = 1
-            global_network.reset_state(True, True)
-            if global_radio_var == 0:
-                adjmatrix, arch, schedule = model.model1()
-            elif global_radio_var == 1:
-                adjmatrix, arch, schedule = model.model2()
-            elif global_radio_var == 2:
-                adjmatrix, arch, schedule = model.model3()
-            else:
-                adjmatrix, arch, schedule = my_model.model()
-            global_network = Network(arch)
-            global_network.load_schedule(schedule)
-            global_model = OptimizationModel(global_network, adjmatrix)
-        else:
-            graph_select = 0
-        print("radiobutton toggled, current value:", self.radio_var.get())
+        if graph_id == 0:
+            wrapper.load_network(model1, 'model1')
+        elif graph_id == 1:
+            wrapper.load_network(model2, 'model2')
+        elif graph_id == 2:
+            wrapper.load_network(model_load, 'predefined_dense', 'predefined_dense')
+        elif graph_id == 3:
+            wrapper.load_network(model_load, 'predefined_sparse', 'predefined_sparse')
+
+        app.on_model_load()
 
     def update_params(self):
-        self.t0 = self.parameters_slider_t0.get_value()
-        self.t1 = self.parameters_slider_t1.get_value()
-        self.alpha = self.parameters_slider_alpha.get_value()
-        self.epoch_size = self.parameters_slider_epoch_size.get_value()
+        wrapper.t0 = self.parameters_slider_t0.get_value()
+        wrapper.t1 = self.parameters_slider_t1.get_value()
+        wrapper.alpha = self.parameters_slider_alpha.get_value()
+        wrapper.epoch_size = self.parameters_slider_epoch_size.get_value()
 
 
 
@@ -271,54 +268,39 @@ class GraphFrame(customtkinter.CTkFrame):
         self.figure_canvas.draw()
         self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
 
+    def update_graph(self):
         self.G = nx.Graph()
-        self.is_running = False
-        self.change_model()
+        for i in range(len(wrapper.model.adjmatrix)):
+            self.G.add_node(i)
+        for i in range(len(wrapper.model.adjmatrix)):
+            for j in range(len(wrapper.model.adjmatrix)):
+                if wrapper.model.adjmatrix[i, j] == 1:
+                    self.G.add_edge(i, j)
+
+        endpoints_ids = [e.id for e in wrapper.model.network.e_it]
+        pos_endpoints = nx.circular_layout(self.G.subgraph(endpoints_ids), scale=2)
+        pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
+        self.pos = pos
 
         self.draw_graph()
 
-    def temp(self):
-        global graph_select
-
-        if graph_select == 1:
-            self.change_model()
-            self.draw_graph()
-
-    def change_model(self):
-
-        global global_model
-        self.G = nx.Graph()
-        for i in range(len(global_model.adjmatrix)):
-            self.G.add_node(i)
-
-        for i in range(len(global_model.adjmatrix)):
-            for j in range(len(global_model.adjmatrix)):
-                if global_model.adjmatrix[i, j] == 1:
-                    self.G.add_edge(i, j)
-
     def draw_graph(self):
-
         self.fig.clear()
         ax = self.fig.add_subplot(111)
-
-        # Model = app.main_frame.chart_frame.chart.Model
-        # endpoints_ids = [e.id for e in Model.network.e_it]
-        # pos_endpoints = nx.circular_layout(self.G.subgraph(endpoints_ids), scale=2)
-        # pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
-
-        nx.draw(self.G,
-                # pos=pos, 
-                ax=ax, with_labels=True, font_weight='bold')
-
+        nx.draw(self.G, pos=self.pos, ax=ax, with_labels=True, font_weight='bold')
         self.fig.canvas.draw()
 
     def draw_graph_with_colors(self):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
 
-        Model = app.main_frame.chart_frame.chart.Model
-        weights = app.main_frame.chart_frame.chart.Model.network.logs['edges_weight']
+        endpoints_ids = [e.id for e in wrapper.model.network.e_it]
+        weights = wrapper.model.network.logs['edges_weight']
+
         for u, v, d in self.G.edges(data=True):
+            if u in endpoints_ids or v in endpoints_ids:
+                d['weight'] = 0
+                continue
             try:
                 w1 = weights[u][v]
             except:
@@ -329,41 +311,21 @@ class GraphFrame(customtkinter.CTkFrame):
                 w2 = 0
             d['weight'] = w1 + w2
 
-        endpoints_ids = [e.id for e in Model.network.e_it]
-
-        pos_endpoints = nx.circular_layout(self.G.subgraph(endpoints_ids), scale=2)
-        # x = [arr[0] for arr in pos_endpoints.values()]
-        # y = [arr[1] for arr in pos_endpoints.values()]
-        # xlim_min = min(x)
-        # ylim_min = min(y)
-        # xlim_max = max(x)
-        # ylim_max = max(y)
-        # for it in range(100):
-        pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
-        # x = [arr[0] for arr in pos.values()]
-        # y = [arr[1] for arr in pos.values()]
-        # if xlim_min <= min(x) and ylim_min <= min(y) and xlim_max >= max(x) and ylim_max >= max(y):
-        #     print(it)
-        #     break
-
         edges, weights = zip(*nx.get_edge_attributes(self.G, 'weight').items())
-        nx.draw(self.G, pos=pos, node_color='b', edgelist=edges, edge_color=weights, width=5, edge_cmap=plt.cm.RdYlBu_r,
+        nx.draw(self.G, pos=self.pos, node_color='b', edgelist=edges, edge_color=weights, width=5, edge_cmap=plt.cm.RdYlBu_r,
                 ax=ax, with_labels=True)
 
         self.fig.canvas.draw()
 
     def draw_graph_solution(self, target_id=8):
-        # def draw_graph_with_colors(self, target_id=8):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
 
-        Model = app.main_frame.chart_frame.chart.Model
-        solution = Model.solution
-
+        solution = wrapper.model.solution
         if solution is None:
             print('trying to draw solution graph with no solution')
 
-        endpoints_gates = [(e.id, e.gate_id) for e in Model.network.e_it if e.id != target_id]
+        endpoints_gates = [(e.id, e.gate_id) for e in wrapper.model.network.e_it if e.id != target_id]
         routers_directions = [(src_id, dst_id) for src_id, routing_table in solution.items() for key, dst_id in
                               routing_table.items() if key == target_id]
 
@@ -371,11 +333,7 @@ class GraphFrame(customtkinter.CTkFrame):
         G.remove_edges_from(list(G.edges))
         G.add_edges_from(endpoints_gates + routers_directions)
 
-        endpoints_ids = [e.id for e in Model.network.e_it]
-        pos_endpoints = nx.circular_layout(self.G.subgraph(endpoints_ids), scale=2)
-        pos = nx.spring_layout(self.G, pos=pos_endpoints, fixed=endpoints_ids, weight=None, seed=42)
-
-        nx.draw(G, pos=pos, ax=ax, with_labels=True, font_weight='bold')
+        nx.draw(G, pos=self.pos, ax=ax, with_labels=True, font_weight='bold')
         self.fig.canvas.draw()
 
 
@@ -402,23 +360,20 @@ class ChartFrame(customtkinter.CTkFrame):
 
         self.chart = ChartInFrame(self)
         self.chart.grid(row=0, column=1)
-        # self.chart.after(0, self.chart.process_queue)
-        # self.chart.after(1000, self.chart.add_to_queue)  # schedule the add_to_queue method to be called after 1 second
 
     def plot_chart_button_event(self):
-        self.plot_chart_event()
-        global min_value
-        global max_value
-        global num_improvements
+        if app.simulation_running:
+            return
 
-    def plot_chart_event(self):
-        self.chart.reload()
-        self.chart.plot_chart(app.main_frame.home_frame.t0,
-                              app.main_frame.home_frame.t1,
-                              app.main_frame.home_frame.alpha,
-                              app.main_frame.home_frame.epoch_size,
-                              app.main_frame.home_frame.neighbourhoods)
+        app.on_simulation_begin()
+        
+        event = threading.Event()
+        t1 = threading.Thread(daemon=True, target=wrapper.simulate,
+                              args=(event, ))
+        t2 = threading.Thread(daemon=True, target=self.chart.process_queue, args=(event,))
 
+        t1.start()
+        t2.start()
 
 class ChartInFrame(customtkinter.CTkFrame):
     def __init__(self, *args, **kwargs):
@@ -432,17 +387,6 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.figure_canvas.draw()
         self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
 
-        global global_model
-        self.Model = global_model
-        self.q = self.Model.log_queue
-
-        self.is_running = False
-
-    def reload(self):
-        global global_model
-        self.Model = global_model
-        self.q = self.Model.log_queue
-
     def draw_graph(self, data):
         self.fig.clear()
         ax = self.fig.add_subplot(111)
@@ -450,77 +394,17 @@ class ChartInFrame(customtkinter.CTkFrame):
         self.fig.canvas.draw()
 
     def process_queue(self, event):
-        global min_value, max_value, num_improvements, simulation_ended
         while True:
-            data = self.q.get(block=True)
+            data = wrapper.model.log_queue.get(block=True)
             if data is None:
-                print('returning - end of simulation')
-                print(min_value, max_value, num_improvements)
-                app.main_frame.chart_frame.text_field.insert('0.0',
-                                                             f'min val: {min_value:.3f}, max val: {max_value:.3f}, num improvements: {num_improvements:.0f}\n')
-                simulation_ended = True
-                # app.main_frame.graph_frame.draw_graph_with_colors()
-                self.is_running = False
+                app.on_simulation_end()
                 return
-            min_value = min(data)
-            max_value = max(data)
-            num_improvements = sum(prev > next for prev, next in zip(data[:-1], data[1:]))
+            wrapper.logs['min_value'] = min(data)
+            wrapper.logs['max_value'] = max(data)
+            wrapper.logs['num_improvements'] = sum(prev > next for prev, next in zip(data[:-1], data[1:]))
 
             self.draw_graph(data)
             event.set()
-
-    def add_to_queue(self):
-        # create some example data
-        data1 = [1, 2, 3, 4]
-        data2 = [5, 6, 7, 8]
-        data3 = [9, 10, 11, 12]
-
-        # add the first data to the queue
-        self.q.put(data1)
-
-        # schedule the second and third data to be added to the queue after 2 seconds and 4 seconds respectively
-        self.after(2000, lambda: self.q.put(data2))
-        self.after(4000, lambda: self.q.put(data3))
-
-    def plot_chart(self, t0=10e5, t1=10e-3, alpha=0.95, epoch_size=50, nbhood=[0, 0, 0, 0, 0, 0]):
-        if self.is_running:
-            return
-        self.is_running = True
-        app.main_frame.chart_frame.text_field.insert('0.0', 'simulation in progress...\n')
-        # print(f'{t0:.2}  {t1:.5}  {alpha:.3}  {epoch_size}')
-        self.Model.network.reset_state(with_schedule=False)
-
-        neighbourhood = set()
-
-        if nbhood[0]:
-            neighbourhood.add(self.Model.change_solution)
-        if nbhood[1]:
-            neighbourhood.add(self.Model.change_solution2)
-        if nbhood[2]:
-            neighbourhood.add(self.Model.change_solution3)
-        if nbhood[3]:
-            neighbourhood.add(self.Model.change_solution4)
-        if nbhood[4]:
-            neighbourhood.add(self.Model.change_solution5)
-        if nbhood[5]:
-            neighbourhood.add(self.Model.change_solution6)
-        print(neighbourhood)
-        if len(neighbourhood) == 0:
-            neighbourhood.add(self.Model.change_solution)
-            neighbourhood.add(self.Model.change_solution2)
-            neighbourhood.add(self.Model.change_solution3)
-            neighbourhood.add(self.Model.change_solution4)
-            neighbourhood.add(self.Model.change_solution5)
-            neighbourhood.add(self.Model.change_solution6)
-
-        event = threading.Event()
-        self.is_running = True
-        t1 = threading.Thread(daemon=True, target=self.Model.run_model,
-                              args=(t0, t1, alpha, epoch_size, neighbourhood, event))
-        t2 = threading.Thread(daemon=True, target=self.process_queue, args=(event,))
-
-        t1.start()
-        t2.start()
 
 
 class NavigationFrame(customtkinter.CTkFrame):
@@ -565,16 +449,6 @@ class NavigationFrame(customtkinter.CTkFrame):
     def graph_button_event(self):
         self.highlight_selected_button(self.graph_button)
         app.main_frame.select_frame_by_name("graph")
-        global prev_radio_var
-        global global_radio_var
-        global simulation_ended
-
-        if simulation_ended:
-            app.main_frame.graph_frame.draw_graph_with_colors()
-            simulation_ended = False
-        elif prev_radio_var != global_radio_var:
-            app.main_frame.graph_frame.temp()
-            prev_radio_var = global_radio_var
 
     def chart_button_event(self):
         self.highlight_selected_button(self.chart_button)
@@ -642,7 +516,30 @@ class App(customtkinter.CTk):
         self.main_frame = MainFrame(self)
         self.main_frame.grid(row=0, column=0, sticky="nsew")
 
+        self.simulation_running = False
+
+    def on_app_load(self):
+        wrapper.load_network(model1, 'model1')
+        self.on_model_load()
+
+    def on_model_load(self):
+        self.main_frame.graph_frame.update_graph()
+
+    def on_simulation_begin(self):
+        self.simulation_running = True
+        # TA LINIJKA DO OSOBNEJ FUNKCJI W CHART FRAME
+        app.main_frame.chart_frame.text_field.insert('0.0', 'simulation in progress...\n')
+
+    def on_simulation_end(self):
+        self.simulation_running = False
+
+        self.main_frame.graph_frame.draw_graph_with_colors()
+        # TA LINIJKA DO OSOBNEJ FUNKCJI W CHART FRAME
+        app.main_frame.chart_frame.text_field.insert('0.0', f"min val: {wrapper.logs['min_value']:.3f}, max val: {wrapper.logs['max_value']:.3f}, num improvements: {wrapper.logs['num_improvements']:.0f}\n")
+
 
 if __name__ == "__main__":
+    wrapper = Wrapper()
     app = App()
+    app.on_app_load()
     app.mainloop()
