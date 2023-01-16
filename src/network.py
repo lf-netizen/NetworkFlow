@@ -32,6 +32,11 @@ class Network:
             self.endpoints[id].schedule = [Datagram(id, dg['destination_id'], dg['request_time'], 
                                                     dg['priority'], to_termination=len(self.routers)+1, route=[id]) for dg in sch]
         
+    @staticmethod
+    def reset_devices_ids():
+        IDevice.endpoints_ids = set()
+        IDevice.routers_ids = set()
+    
     def reset_state(self, with_schedule: bool = True, with_devices: bool = False) -> None:
         timer.time = 0
         self.datagrams = []
