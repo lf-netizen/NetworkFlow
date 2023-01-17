@@ -125,7 +125,7 @@ class ArrowGraph(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
         self.option_menu = OptionMenuWithName(self, options=[], name='choose endpoint ID', command=self.option_menu_event)
-        self.option_menu.grid(row=1, column=0, sticky='es')
+        self.option_menu.grid(row=1, column=0, padx=(15), sticky='es')
 
         self.canvas = tk.Canvas(self, width=500, height=500)
         self.canvas.grid(row=0, column=0, columnspan=2, padx=20, pady=(0, 20), sticky='nw')
@@ -268,6 +268,7 @@ class RoutingTable(customtkinter.CTkFrame):
         self.textbox.grid(row=0, column=0)
 
     def write_to_textbox(self, string):
+        self.textbox.delete('0.0', 'end')
         self.textbox.insert('0.0', string)
 
 # class RoutingTable(customtkinter.CTkFrame):
@@ -552,7 +553,7 @@ class GraphFrame(customtkinter.CTkFrame):
                                                                 variable=self.radio_graph_reload, value=3, text="random network")
         self.radio_4.grid(row=4, column=0, padx=20, pady=10, sticky='w')
         self.radio_5 = customtkinter.CTkRadioButton(self.model_selection_frame, command=self.graph_reload_event,
-                                                                variable=self.radio_graph_reload, value=4, text="my_network", state=tkinter.DISABLED)
+                                                                variable=self.radio_graph_reload, value=4, text="my network", state=tkinter.DISABLED)
         self.radio_5.grid(row=5, column=0, padx=20, pady=10, sticky='w')
 
 
@@ -670,30 +671,30 @@ class ChartFrame(customtkinter.CTkFrame):
         self.chart_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10,
                                                    text="Chart",
                                                    fg_color="transparent", text_color="gray10", hover_color="gray70",
-                                                   anchor="w", command=self.chart_button_event,
+                                                   anchor="ew", command=self.chart_button_event,
                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.chart_button.grid(row=0, column=0, sticky='ew')
+        self.chart_button.grid(row=0, column=0, sticky='e')
 
         self.colored_graph_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10,
                                                    text="Colored graph",
                                                    fg_color="transparent", text_color="gray10", hover_color="gray70",
-                                                   anchor="w", command=self.colored_graph_button_event,
+                                                   anchor="ew", command=self.colored_graph_button_event,
                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.colored_graph_button.grid(row=0, column=1, sticky='ew')
+        self.colored_graph_button.grid(row=0, column=1, sticky='e')
 
         self.arrow_graph_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10,
                                                    text="Arrow Graph",
                                                    fg_color="transparent", text_color="gray10", hover_color="gray70",
-                                                   anchor="w", command=self.arrow_graph_button_event,
+                                                   anchor="ew", command=self.arrow_graph_button_event,
                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.arrow_graph_button.grid(row=0, column=2, sticky='ew')
+        self.arrow_graph_button.grid(row=0, column=2, sticky='e')
 
         self.routing_table_button = customtkinter.CTkButton(self, corner_radius=0, height=40, border_spacing=10,
                                                    text="Routing table",
                                                    fg_color="transparent", text_color="gray10", hover_color="gray70",
-                                                   anchor="w", command=self.routing_table_button_event,
+                                                   anchor="ew", command=self.routing_table_button_event,
                                                    font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.routing_table_button.grid(row=0, column=3, sticky='ew')
+        self.routing_table_button.grid(row=0, column=3, sticky='e')
 
         # self.text_field = customtkinter.CTkTextbox(self, width=500, height=20, activate_scrollbars=False)
         # self.text_field.grid(row=2, column=0, columnspan=4, padx=(20, 20), pady=(25, 14), sticky="nsew")
