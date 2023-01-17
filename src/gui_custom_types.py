@@ -30,8 +30,8 @@ class OptionMenuWithName(customtkinter.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        self.option_menu = customtkinter.CTkOptionMenu(self, values=self.options, width=100, height=20, command=command)
-        self.option_menu.grid(row=0, column=1, padx=(0, 0), pady=0, sticky='ew')
+        self.option_menu = customtkinter.CTkOptionMenu(self, values=self.options, command=command)
+        self.option_menu.grid(row=0, column=1, padx=(0, 15), pady=0, sticky='ew')
 
         self.name = customtkinter.CTkButton(self, corner_radius=0, width=90, height=20, border_spacing=10,
                                                    text=f'{name}:',
@@ -135,34 +135,34 @@ class RandomGraphParams(customtkinter.CTkFrame):
                                                        text="Random network params",
                                                        fg_color="transparent", text_color=("gray10", "gray90"),
                                                        hover=False,
-                                                       anchor="n",
+                                                       anchor="ew",
                                                        font=customtkinter.CTkFont(size=15, weight="bold"))
         self.label.grid(row=0, column=0)
 
         self.number_of_routers = TextboxWithName(self, name='number of routers', state='normal', use_precision=False, m_font_size=None, m_font_weight='normal')
         self.number_of_routers.change_value(self.routers_val)
-        self.number_of_routers.grid(row=1, column=0, pady=5, sticky='e')
+        self.number_of_routers.grid(row=1, column=0, pady=3, sticky='e')
         self.number_of_PCs = TextboxWithName(self, name='number of PCs', state='normal', use_precision=False, m_font_size=None, m_font_weight='normal')
         self.number_of_PCs.change_value(self.PCs_val)
-        self.number_of_PCs.grid(row=2, column=0, pady=5, sticky='e')
+        self.number_of_PCs.grid(row=2, column=0, pady=3, sticky='e')
         self.number_of_packages = TextboxWithName(self, name='number of packages', state='normal', use_precision=False, m_font_size=None, m_font_weight='normal')
         self.number_of_packages.change_value(self.packages_val)
-        self.number_of_packages.grid(row=3, column=0, pady=5, sticky='e')
+        self.number_of_packages.grid(row=3, column=0, pady=3, sticky='e')
         self.connection_probability = TextboxWithName(self, name='connection probability', state='normal', use_precision=False, m_font_size=None, m_font_weight='normal')
         self.connection_probability.change_value(self.prob_val)
-        self.connection_probability.grid(row=4, column=0, pady=5, sticky='e')
+        self.connection_probability.grid(row=4, column=0, pady=3, sticky='e')
         self.timespan = TextboxWithName(self, name='timespan', state='normal', use_precision=False, m_font_size=12, m_font_weight='normal')
         self.timespan.change_value(self.time_val)
-        self.timespan.grid(row=5, column=0, pady=5, sticky='e')
+        self.timespan.grid(row=5, column=0, pady=3, sticky='e')
 
         self.save_button = customtkinter.CTkButton(self,
-                                            width=50,
-                                            height=20, border_spacing=10,
+                                            width=100,
+                                            height=10, border_spacing=5,
                                             border_width=0,
-                                            corner_radius=8,
+                                            corner_radius=5,
                                             text="RELOAD",
                                             command=self.button_event, 
-                                            font=customtkinter.CTkFont(size=12, weight="bold"))
+                                            font=customtkinter.CTkFont(size=11, weight="bold"))
         self.save_button.grid(row=6, column=0, pady=10)
     
     def button_event(self):
