@@ -15,7 +15,6 @@ import tkinter as tk
 import time
 import threading
 import model
-import my_model
 import copy
 
 

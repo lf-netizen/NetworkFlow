@@ -15,7 +15,6 @@ import tkinter as tk
 import time
 import threading
 import model
-import my_model
 import copy
 from itertools import compress
 from gui_custom_types import SliderBlock, EssentialsTextField, OptionMenuWithName, RandomGraphParams
@@ -106,11 +105,16 @@ class PopUpWindow(customtkinter.CTkToplevel):
         return self.textbox.get('0.0', 'end')
 
     def button_event(self) -> str:
-        with open("src/my_model.py", "w") as f:
-            f.truncate()
-            f.write(f'from custom_types import ID\nimport numpy as np\n{self.read_from_textbox()}')
         self.withdraw()
+        with open("models/user_uploaded.json", "w") as f:
+            f.write(self.read_from_textbox())
+        try:
+            wrapper.load_network(model_from_file('user_uploaded'), f'{time.perf_counter()}')
+        except:
+            print('Error: could not parse network.')
+            return
         self.command_when_saved()
+        app.on_model_load()
 
         
 
@@ -374,12 +378,6 @@ class HomeFrame(customtkinter.CTkFrame):
         self.parameters_slider_alpha.reset()
         self.parameters_slider_epoch_size.reset()
 
-    # def upload_model_button_event(self):
-    #     text = self.textbox.get("0.0", "end")
-
-    #     with open('src/my_model.py', 'w') as f:
-    #         f.write(f'from custom_types import ID\nimport numpy as np\n{text}')
-
     def switch1_event(self):
         wrapper.nbhoods[0] = self.switch_var1.get()
 
@@ -492,6 +490,7 @@ class GraphFrame(customtkinter.CTkFrame):
 
     def import_window_command(self):
         self.radio_4.configure(state=tkinter.NORMAL)
+        self.radio_4.select()
         
 
     def graph_reload_event(self):
