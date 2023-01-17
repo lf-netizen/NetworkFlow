@@ -5,9 +5,9 @@ import pickle
 import json
 
 # for generate random network in GUI -> GraphFrame
-def random_network_model(number_of_routers, number_of_PCs, number_of_packages, connection_probability, timespan):
-    adjmatrix, arch = generate_random_adjacency_matrix(m=number_of_routers, n=number_of_PCs, connection_probability=0.4)
-    schedule = generate_random_schedule(arch=arch, num_of_packages=number_of_packages)
+def random_network_model(number_of_routers=10, number_of_PCs=5, number_of_packages=100, connection_probability=0.5, timespan=5):
+    adjmatrix, arch = generate_fully_connected_graph(m=number_of_routers, n=number_of_PCs, connection_probability=connection_probability)
+    schedule = generate_random_schedule(arch, number_of_packages, timespan)
     return adjmatrix, arch, schedule
 
 def dense_test_model():

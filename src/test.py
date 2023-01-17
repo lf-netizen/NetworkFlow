@@ -120,10 +120,13 @@ def generate_fully_connected_graph(m:int, n:int, connection_probability:float):
         endpoint_ids = []
         for endpoint in arch['endpoints']:
             endpoint_ids.append(endpoint['id'])
-        if fully_connected(adjmatrix, endpoint_ids):
-            return adjmatrix, arch
-
-def generate_random_schedule(arch: Dict, num_of_packages: int):
+        try:
+            if fully_connected(adjmatrix, endpoint_ids):
+                return adjmatrix, arch
+        except:
+            pass
+        
+def generate_random_schedule(arch: Dict, num_of_packages: int, timespan: int = 5):
     endpoint_ids = []
     for endpoint in arch['endpoints']:
         endpoint_ids.append(endpoint['id'])
@@ -136,5 +139,5 @@ def generate_random_schedule(arch: Dict, num_of_packages: int):
             end_id = random.choice(endpoint_ids)
         if start_id not in schedule:
             schedule[start_id] = []
-        schedule[start_id].append({'destination_id': end_id, 'request_time': random.randrange(1,6), 'priority': random.randrange(1,4)})
+        schedule[start_id].append({'destination_id': end_id, 'request_time': random.randrange(1, timespan), 'priority': random.randrange(1,4)})
     return schedule

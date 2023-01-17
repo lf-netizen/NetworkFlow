@@ -411,10 +411,10 @@ class GraphFrame(customtkinter.CTkFrame):
         self._corner_radius = 0
 
         # params for random graph
-        self.number_of_routers = 5
-        self.number_of_PCs = 3
-        self.number_of_packages = 50
-        self.connection_probability = 0.2
+        self.number_of_routers = 10
+        self.number_of_PCs = 5
+        self.number_of_packages = 100
+        self.connection_probability = 0.6
         self.timespan = 100
 
         # self._fg_color="#FF0000"
@@ -477,12 +477,35 @@ class GraphFrame(customtkinter.CTkFrame):
 
 
     def save_random_network(self):
-        self.number_of_routers = int(self.random_graph_frame.number_of_routers.get_value())
-        self.number_of_PCs = int(self.random_graph_frame.number_of_PCs.get_value())
-        self.number_of_packages = int(self.random_graph_frame.number_of_packages.get_value())
-        self.connection_probability = int(self.random_graph_frame.connection_probability.get_value())
-        self.timespan = int(self.random_graph_frame.timespan.get_value())
+        try:
+            self.number_of_routers = int(self.random_graph_frame.number_of_routers.get_value())
+        except:
+            pass
+        try:
+            self.number_of_PCs = int(self.random_graph_frame.number_of_PCs.get_value())
+        except:
+            pass
+        try:
+            self.number_of_packages = int(self.random_graph_frame.number_of_packages.get_value())
+        except:
+            pass
+        try:
+            self.connection_probability = int(self.random_graph_frame.connection_probability.get_value())
+        except:
+            pass
+        try:
+            self.timespan = int(self.random_graph_frame.timespan.get_value())
+        except:
+            pass
 
+        wrapper.load_network(model.random_network_model, f'{time.perf_counter()}', 
+                            number_of_routers=self.number_of_routers, 
+                            number_of_PCs=self.number_of_PCs, 
+                            number_of_packages=self.number_of_packages,
+                            connection_probability=self.connection_probability,
+                            timespan = self.timespan)
+
+        app.on_model_load()
 
 
     def import_model_event(self):
@@ -502,14 +525,35 @@ class GraphFrame(customtkinter.CTkFrame):
         elif graph_id == 2:
             wrapper.load_network(model_from_file('predefined_dense'), 'predefined_dense')
         elif graph_id == 3:
-            wrapper.load_network(model.random_network_model, 'random', 
+            try:
+                self.number_of_routers = int(self.random_graph_frame.number_of_routers.get_value())
+            except:
+                pass
+            try:
+                self.number_of_PCs = int(self.random_graph_frame.number_of_PCs.get_value())
+            except:
+                pass
+            try:
+                self.number_of_packages = int(self.random_graph_frame.number_of_packages.get_value())
+            except:
+                pass
+            try:
+                self.connection_probability = int(self.random_graph_frame.connection_probability.get_value())
+            except:
+                pass
+            try:
+                self.timespan = int(self.random_graph_frame.timespan.get_value())
+            except:
+                pass
+            
+            wrapper.load_network(model.random_network_model, f'{time.perf_counter()}', 
                                  number_of_routers=self.number_of_routers, 
                                  number_of_PCs=self.number_of_PCs, 
                                  number_of_packages=self.number_of_packages,
                                  connection_probability=self.connection_probability,
                                  timespan = self.timespan)
         elif graph_id == 4:
-            wrapper.load_network(model_from_file('predefined_sparse'), 'predefined_sparse')
+            wrapper.load_network(model_from_file('user_uploaded'), f'{time.perf_counter()}')
 
         app.on_model_load()
 

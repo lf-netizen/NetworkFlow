@@ -148,7 +148,7 @@ class RandomGraphParams(customtkinter.CTkFrame):
                                             height=40, border_spacing=10,
                                             border_width=0,
                                             corner_radius=8,
-                                            text="SAVE",
+                                            text="RELOAD",
                                             command=self.button_event, 
                                             font=customtkinter.CTkFont(size=15, weight="bold"))
         self.save_button.grid(row=6, column=0)
