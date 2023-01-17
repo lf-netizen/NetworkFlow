@@ -56,7 +56,7 @@ class OptionMenuWithName(customtkinter.CTkFrame):
 
 class TextboxWithName(customtkinter.CTkFrame):
     def __init__(self, *args, value=5, name='name', set_precision=2, use_precision=True,
-                 v_witdth=60, v_height=20, v_activate_scrollbars=False, v_border_spacing=0, v_state='disable',
+                 v_witdth=60, v_height=20, v_activate_scrollbars=False, v_border_spacing=0, state='disabled',
                  m_witdth=70, m_height=20, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -64,6 +64,7 @@ class TextboxWithName(customtkinter.CTkFrame):
         self.name = name
         self.set_precision = set_precision
         self.use_precision = use_precision
+        self.state = state
 
         self._bg_color = '#e5e5e5'
         self._fg_color = '#e5e5e5'
@@ -71,7 +72,7 @@ class TextboxWithName(customtkinter.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
-        self.value_textbox = customtkinter.CTkTextbox(self, width=v_witdth, height=v_height, bg_color='#e5e5e5', activate_scrollbars=v_activate_scrollbars, border_spacing=v_border_spacing, state=v_state)
+        self.value_textbox = customtkinter.CTkTextbox(self, width=v_witdth, height=v_height, bg_color='#e5e5e5', activate_scrollbars=v_activate_scrollbars, border_spacing=v_border_spacing, state=self.state)
         self.value_textbox.grid(row=0, column=1, padx=(0, 0), pady=0, sticky='ew')
 
         self.name = customtkinter.CTkButton(self, corner_radius=0, width=m_witdth, height=m_height, border_spacing=6,
@@ -82,18 +83,80 @@ class TextboxWithName(customtkinter.CTkFrame):
         self.name.grid(row=0, column=0, padx=(0, 0), pady=0, sticky='ew')
 
     def change_value(self, val):
-        self.value_textbox.configure(state="normal")
-        self.value_textbox.delete('0.0', 'end')
-        if self.use_precision:
-            self.value_textbox.insert("0.0", f'{val:.{self.set_precision}}')
-        else:
-            self.value_textbox.insert("0.0", f'{val}')
-        self.value_textbox.configure(state="disabled")
+        if self.state == 'disabled':
+            self.value_textbox.configure(state="normal")
+            self.value_textbox.delete('0.0', 'end')
+            if self.use_precision:
+                self.value_textbox.insert("0.0", f'{val:.{self.set_precision}}')
+            else:
+                self.value_textbox.insert("0.0", f'{val}')
+            self.value_textbox.configure(state="disabled")
+        elif self.state == 'normal':
+            self.value_textbox.delete('0.0', 'end')
+            if self.use_precision:
+                self.value_textbox.insert("0.0", f'{val:.{self.set_precision}}')
+            else:
+                self.value_textbox.insert("0.0", f'{val}')
     
     def reset_value(self):
-        self.value_textbox.configure(state="normal")
-        self.value_textbox.delete('0.0', 'end')
-        self.value_textbox.configure(state="disabled")     
+        if self.state == 'disabled':
+            self.value_textbox.configure(state="normal")
+            self.value_textbox.delete('0.0', 'end')
+            self.value_textbox.configure(state="disabled")     
+        elif self.state == 'normal':
+            self.value_textbox.delete('0.0', 'end')
+    
+    def get_value(self):
+        if self.state == 'disabled':
+            self.value_textbox.configure(state="normal")
+            val = self.value_textbox.get('0.0', 'end')
+            self.value_textbox.configure(state="disabled")     
+            return val
+        elif self.state == 'normal':
+            return self.value_textbox.get('0.0', 'end')
+
+
+class RandomGraphParams(customtkinter.CTkFrame):
+    def __init__(self, *args, command=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.callback = command
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(6, weight=1)
+
+        self.label = customtkinter.CTkButton(self, corner_radius=0, height=20, border_spacing=10,
+                                                       text="Random network params",
+                                                       fg_color="transparent", text_color=("gray10", "gray90"),
+                                                       hover=False,
+                                                       anchor="n",
+                                                       font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.label.grid(row=0, column=0)
+
+        self.number_of_routers = TextboxWithName(self, name='number of routers', state='normal')
+        self.number_of_routers.grid(row=1, column=0)
+        self.number_of_PCs = TextboxWithName(self, name='number of PCs', state='normal')
+        self.number_of_PCs.grid(row=2, column=0)
+        self.number_of_packages = TextboxWithName(self, name='number of packages', state='normal')
+        self.number_of_packages.grid(row=3, column=0)
+        self.connection_probability = TextboxWithName(self, name='connection probability', state='normal')
+        self.connection_probability.grid(row=4, column=0)
+        self.timespan = TextboxWithName(self, name='timespan', state='normal')
+        self.timespan.grid(row=5, column=0)
+
+        self.save_button = customtkinter.CTkButton(self,
+                                            width=50,
+                                            height=40, border_spacing=10,
+                                            border_width=0,
+                                            corner_radius=8,
+                                            text="SAVE",
+                                            command=self.button_event, 
+                                            font=customtkinter.CTkFont(size=15, weight="bold"))
+        self.save_button.grid(row=6, column=0)
+    
+    def button_event(self):
+        self.callback()
+  
 
 
 class EssentialsTextField(customtkinter.CTkFrame):

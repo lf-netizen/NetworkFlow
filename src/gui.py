@@ -18,7 +18,7 @@ import model
 import my_model
 import copy
 from itertools import compress
-from gui_custom_types import SliderBlock, EssentialsTextField, OptionMenuWithName
+from gui_custom_types import SliderBlock, EssentialsTextField, OptionMenuWithName, RandomGraphParams
 
 from model import model_from_file, unpack_json, model1, model2, model3
 
@@ -49,12 +49,11 @@ class Wrapper:
         self.epoch_size = 10
         self.nbhoods = [1] * 6
     
-    def load_network(self, loader: callable, model_name: str = None, *args) -> None:
+    def load_network(self, loader: callable, model_name: str = None, *args, **kwargs) -> None:
         if self.model_name == model_name:
             return
 
-        adjmatrix, arch, schedule = loader(*args)
-        
+        adjmatrix, arch, schedule = loader(*args, **kwargs)
         Network.reset_devices_ids()
         network = Network(arch)
         network.load_schedule(schedule)
@@ -412,14 +411,22 @@ class GraphFrame(customtkinter.CTkFrame):
         super().__init__(*args, **kwargs)
 
         self._corner_radius = 0
+
+        # params for random graph
+        self.number_of_routers = 5
+        self.number_of_PCs = 3
+        self.number_of_packages = 50
+        self.connection_probability = 0.2
+        self.timespan = 100
+
         # self._fg_color="#FF0000"
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
         self.model_selection_frame = customtkinter.CTkFrame(self)
         self.model_selection_frame.grid(row=0, column=1, padx=20, pady=20)
 
-        self.model_selection_frame.grid_rowconfigure(4, weight=1)
+        self.model_selection_frame.grid_rowconfigure(5, weight=1)
         self.model_selection_frame.grid_columnconfigure(0, weight=1)
 
         self.network_label_button = customtkinter.CTkButton(self.model_selection_frame, corner_radius=0, height=20, border_spacing=10,
@@ -433,16 +440,24 @@ class GraphFrame(customtkinter.CTkFrame):
         self.radio_graph_reload = tkinter.IntVar(value=0)
         self.radio_1 = customtkinter.CTkRadioButton(self.model_selection_frame, command=self.graph_reload_event,
                                                                 variable=self.radio_graph_reload, value=0, text="network 1")
-        self.radio_1.grid(row=1, column=0, padx=20, pady=10)
+        self.radio_1.grid(row=1, column=0, padx=20, pady=10, sticky='w')
         self.radio_2 = customtkinter.CTkRadioButton(self.model_selection_frame, command=self.graph_reload_event,
                                                                 variable=self.radio_graph_reload, value=1, text="network 2")
-        self.radio_2.grid(row=2, column=0, padx=20, pady=10)
+        self.radio_2.grid(row=2, column=0, padx=20, pady=10, sticky='w')
         self.radio_3 = customtkinter.CTkRadioButton(self.model_selection_frame, command=self.graph_reload_event,
                                                                 variable=self.radio_graph_reload, value=2, text="network 3")
-        self.radio_3.grid(row=3, column=0, padx=20, pady=10)
+        self.radio_3.grid(row=3, column=0, padx=20, pady=10, sticky='w')
         self.radio_4 = customtkinter.CTkRadioButton(self.model_selection_frame, command=self.graph_reload_event,
-                                                                variable=self.radio_graph_reload, value=3, text="my_network", state=tkinter.DISABLED)
-        self.radio_4.grid(row=4, column=0, padx=20, pady=10)
+                                                                variable=self.radio_graph_reload, value=3, text="random network")
+        self.radio_4.grid(row=4, column=0, padx=20, pady=10, sticky='w')
+        self.radio_5 = customtkinter.CTkRadioButton(self.model_selection_frame, command=self.graph_reload_event,
+                                                                variable=self.radio_graph_reload, value=4, text="my_network", state=tkinter.DISABLED)
+        self.radio_5.grid(row=5, column=0, padx=20, pady=10, sticky='w')
+
+
+        self.random_graph_frame = RandomGraphParams(self, command=self.save_random_network)
+        self.random_graph_frame.grid(row=1, column=1, padx=20, pady=(0, 20), sticky="sew")
+
 
         self.import_model_button = customtkinter.CTkButton(self,
                                                              width=50,
@@ -451,16 +466,25 @@ class GraphFrame(customtkinter.CTkFrame):
                                                              corner_radius=8,
                                                              text="Upload\nmodel",
                                                              command=self.import_model_event, font=customtkinter.CTkFont(size=15, weight="bold"))
-        self.import_model_button.grid(row=1, column=1, padx=20, pady=(0, 20), sticky="sew")
+        self.import_model_button.grid(row=2, column=1, padx=20, pady=(0, 20), sticky="sew")
         
 
         self.canvas = tk.Canvas(self, width=500, height=500)
-        self.canvas.grid(row=0, column=0, rowspan=2, padx=20, pady=(0, 20))
+        self.canvas.grid(row=0, column=0, rowspan=3, padx=20, pady=(0, 20))
 
         self.fig = Figure(figsize=(8, 8))
         self.figure_canvas = FigureCanvasTkAgg(self.fig, self.canvas)
         self.figure_canvas.draw()
         self.figure_canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
+
+
+    def save_random_network(self):
+        self.number_of_routers = int(self.random_graph_frame.number_of_routers.get_value())
+        self.number_of_PCs = int(self.random_graph_frame.number_of_PCs.get_value())
+        self.number_of_packages = int(self.random_graph_frame.number_of_packages.get_value())
+        self.connection_probability = int(self.random_graph_frame.connection_probability.get_value())
+        self.timespan = int(self.random_graph_frame.timespan.get_value())
+
 
 
     def import_model_event(self):
@@ -469,7 +493,6 @@ class GraphFrame(customtkinter.CTkFrame):
     def import_window_command(self):
         self.radio_4.configure(state=tkinter.NORMAL)
         
-
 
     def graph_reload_event(self):
         graph_id = self.radio_graph_reload.get()
@@ -480,6 +503,13 @@ class GraphFrame(customtkinter.CTkFrame):
         elif graph_id == 2:
             wrapper.load_network(model_from_file('predefined_dense'), 'predefined_dense')
         elif graph_id == 3:
+            wrapper.load_network(model.random_network_model, 'random', 
+                                 number_of_routers=self.number_of_routers, 
+                                 number_of_PCs=self.number_of_PCs, 
+                                 number_of_packages=self.number_of_packages,
+                                 connection_probability=self.connection_probability,
+                                 timespan = self.timespan)
+        elif graph_id == 4:
             wrapper.load_network(model_from_file('predefined_sparse'), 'predefined_sparse')
 
         app.on_model_load()
@@ -570,8 +600,6 @@ class ChartFrame(customtkinter.CTkFrame):
                                                    anchor="nesw",
                                                    font=customtkinter.CTkFont(size=20, weight="bold"))
         self.simulation_in_progres_text.grid(row=2, column=0, columnspan=4, sticky='sew')
-    
-        # self.routing_table_button = customtkinter.CTkButton(self, text="Routing\ntable", command=self.routing_table_button_event)
         
 
     def routing_table_button_event(self):
