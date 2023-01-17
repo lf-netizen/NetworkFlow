@@ -116,10 +116,15 @@ class TextboxWithName(customtkinter.CTkFrame):
 
 
 class RandomGraphParams(customtkinter.CTkFrame):
-    def __init__(self, *args, command=None, **kwargs):
+    def __init__(self, *args, command=None, routers_val=10, PCs_val=5, packages_val=100, prob_val=0.5, time_val=5, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.callback = command
+        self.routers_val = routers_val
+        self.PCs_val = PCs_val
+        self.packages_val = packages_val
+        self.prob_val = prob_val
+        self.time_val = time_val
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(6, weight=1)
@@ -132,25 +137,30 @@ class RandomGraphParams(customtkinter.CTkFrame):
                                                        font=customtkinter.CTkFont(size=15, weight="bold"))
         self.label.grid(row=0, column=0)
 
-        self.number_of_routers = TextboxWithName(self, name='number of routers', state='normal')
-        self.number_of_routers.grid(row=1, column=0)
-        self.number_of_PCs = TextboxWithName(self, name='number of PCs', state='normal')
-        self.number_of_PCs.grid(row=2, column=0)
-        self.number_of_packages = TextboxWithName(self, name='number of packages', state='normal')
-        self.number_of_packages.grid(row=3, column=0)
-        self.connection_probability = TextboxWithName(self, name='connection probability', state='normal')
-        self.connection_probability.grid(row=4, column=0)
-        self.timespan = TextboxWithName(self, name='timespan', state='normal')
-        self.timespan.grid(row=5, column=0)
+        self.number_of_routers = TextboxWithName(self, name='number of routers', state='normal', use_precision=False)
+        self.number_of_routers.change_value(self.routers_val)
+        self.number_of_routers.grid(row=1, column=0, sticky='e')
+        self.number_of_PCs = TextboxWithName(self, name='number of PCs', state='normal', use_precision=False)
+        self.number_of_PCs.change_value(self.PCs_val)
+        self.number_of_PCs.grid(row=2, column=0, sticky='e')
+        self.number_of_packages = TextboxWithName(self, name='number of packages', state='normal', use_precision=False)
+        self.number_of_packages.change_value(self.packages_val)
+        self.number_of_packages.grid(row=3, column=0, sticky='e')
+        self.connection_probability = TextboxWithName(self, name='connection probability', state='normal', use_precision=False)
+        self.connection_probability.change_value(self.prob_val)
+        self.connection_probability.grid(row=4, column=0, sticky='e')
+        self.timespan = TextboxWithName(self, name='timespan', state='normal', use_precision=False)
+        self.timespan.change_value(self.time_val)
+        self.timespan.grid(row=5, column=0, sticky='e')
 
         self.save_button = customtkinter.CTkButton(self,
                                             width=50,
-                                            height=40, border_spacing=10,
+                                            height=20, border_spacing=10,
                                             border_width=0,
                                             corner_radius=8,
                                             text="RELOAD",
                                             command=self.button_event, 
-                                            font=customtkinter.CTkFont(size=15, weight="bold"))
+                                            font=customtkinter.CTkFont(size=12, weight="bold"))
         self.save_button.grid(row=6, column=0)
     
     def button_event(self):

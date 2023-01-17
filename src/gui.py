@@ -72,8 +72,6 @@ class Wrapper:
         self.logs['num_deteriorations'] = sum(prev > next for prev, next in zip(data[:-1], data[1:]))
 
 
-
-
 # pop-up window class
 class PopUpWindow(customtkinter.CTkToplevel):
     def __init__(self, command_when_saved):
@@ -414,8 +412,8 @@ class GraphFrame(customtkinter.CTkFrame):
         self.number_of_routers = 10
         self.number_of_PCs = 5
         self.number_of_packages = 100
-        self.connection_probability = 0.6
-        self.timespan = 100
+        self.connection_probability = 0.5
+        self.timespan = 5
 
         # self._fg_color="#FF0000"
         self.grid_rowconfigure(2, weight=1)
@@ -462,8 +460,8 @@ class GraphFrame(customtkinter.CTkFrame):
                                                              height=40, border_spacing=10,
                                                              border_width=0,
                                                              corner_radius=8,
-                                                             text="Upload\nmodel",
-                                                             command=self.import_model_event, font=customtkinter.CTkFont(size=15, weight="bold"))
+                                                             text="Upload model",
+                                                             command=self.import_model_event, font=customtkinter.CTkFont(size=12, weight="bold"))
         self.import_model_button.grid(row=2, column=1, padx=20, pady=(0, 20), sticky="sew")
         
 
@@ -477,26 +475,20 @@ class GraphFrame(customtkinter.CTkFrame):
 
 
     def save_random_network(self):
+        self.radio_graph_reload.set(3)
+
         try:
             self.number_of_routers = int(self.random_graph_frame.number_of_routers.get_value())
-        except:
-            pass
-        try:
             self.number_of_PCs = int(self.random_graph_frame.number_of_PCs.get_value())
-        except:
-            pass
-        try:
             self.number_of_packages = int(self.random_graph_frame.number_of_packages.get_value())
-        except:
-            pass
-        try:
-            self.connection_probability = int(self.random_graph_frame.connection_probability.get_value())
-        except:
-            pass
-        try:
+            self.connection_probability = float(self.random_graph_frame.connection_probability.get_value())
             self.timespan = int(self.random_graph_frame.timespan.get_value())
         except:
-            pass
+            self.random_graph_frame.number_of_routers.change_value(self.number_of_routers)
+            self.random_graph_frame.number_of_PCs.change_value(self.number_of_PCs)
+            self.random_graph_frame.number_of_packages.change_value(self.number_of_packages)
+            self.random_graph_frame.connection_probability.change_value(self.connection_probability)
+            self.random_graph_frame.timespan.change_value(self.timespan)
 
         wrapper.load_network(model.random_network_model, f'{time.perf_counter()}', 
                             number_of_routers=self.number_of_routers, 
@@ -512,8 +504,8 @@ class GraphFrame(customtkinter.CTkFrame):
         self.import_window = PopUpWindow(self.import_window_command)
 
     def import_window_command(self):
-        self.radio_4.configure(state=tkinter.NORMAL)
-        self.radio_4.select()
+        self.radio_5.configure(state=tkinter.NORMAL)
+        self.radio_5.select()
         
 
     def graph_reload_event(self):
@@ -524,28 +516,7 @@ class GraphFrame(customtkinter.CTkFrame):
             wrapper.load_network(model2, 'model2')
         elif graph_id == 2:
             wrapper.load_network(model_from_file('predefined_dense'), 'predefined_dense')
-        elif graph_id == 3:
-            try:
-                self.number_of_routers = int(self.random_graph_frame.number_of_routers.get_value())
-            except:
-                pass
-            try:
-                self.number_of_PCs = int(self.random_graph_frame.number_of_PCs.get_value())
-            except:
-                pass
-            try:
-                self.number_of_packages = int(self.random_graph_frame.number_of_packages.get_value())
-            except:
-                pass
-            try:
-                self.connection_probability = int(self.random_graph_frame.connection_probability.get_value())
-            except:
-                pass
-            try:
-                self.timespan = int(self.random_graph_frame.timespan.get_value())
-            except:
-                pass
-            
+        elif graph_id == 3:          
             wrapper.load_network(model.random_network_model, f'{time.perf_counter()}', 
                                  number_of_routers=self.number_of_routers, 
                                  number_of_PCs=self.number_of_PCs, 

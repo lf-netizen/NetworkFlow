@@ -107,8 +107,8 @@ def fully_connected(adjmatrix: np.ndarray, endpoint_ids: List[int]) -> bool:
                 if new_path:
                     return new_path
         return None
-    for start_vertex in endpoint_ids:
-        for end_vertex in endpoint_ids:
+    for start_vertex in range(len(adjmatrix)):
+        for end_vertex in range(len(adjmatrix)):
             path = dfs(adjmatrix, start_vertex, end_vertex, [], [])
             if path is None:
                 raise ValueError('Network is not connected')
