@@ -416,7 +416,13 @@ class OptimizationModel:
 
         self.network.logs = previous_logs
         self.solution = best_solution
-        self.log_queue.put(None)
+
+        if event is not None:
+            self.log_queue.put(cost)
+            event.wait()
+            event.clear()
+            self.log_queue.put(None)
+            
         return best_solution, it, cost
 
 
