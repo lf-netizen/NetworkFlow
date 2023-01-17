@@ -183,7 +183,7 @@ def model3():
     return adjmatrix, arch, schedule
 
 
-def unpack_json(json_data: str) -> None:
+def unpack_json(json_data: str):
     # Deserialize the JSON data to a Python list
     model_data = json.loads(json_data)
     model_data['schedule'] = {int(k): v for k, v in model_data['schedule'].items()}
